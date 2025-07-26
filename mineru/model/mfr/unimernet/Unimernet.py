@@ -104,6 +104,10 @@ class UnimernetModel(object):
 
         # Create dataset with sorted images
         dataset = MathDataset(sorted_images, transform=self.model.transform)
+
+        # 如果batch_size > len(sorted_images)，则设置为不超过len(sorted_images)的2的幂
+        batch_size = min(batch_size, max(1, 2 ** (len(sorted_images).bit_length() - 1))) if sorted_images else 1
+
         dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=0)
 
         # Process batches and store results
@@ -115,7 +119,7 @@ class UnimernetModel(object):
                 mf_img = mf_img.to(dtype=self.model.dtype)
                 mf_img = mf_img.to(self.device)
                 with torch.no_grad():
-                    output = self.model.generate({"image": mf_img})
+                    output = self.model.generate({"image": mf_img}, batch_size=batch_size)
                 mfr_res.extend(output["fixed_str"])
 
                 # 更新进度条，每次增加batch_size，但要注意最后一个batch可能不足batch_size

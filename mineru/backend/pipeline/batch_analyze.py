@@ -12,6 +12,7 @@ from ...utils.ocr_utils import get_adjusted_mfdetrec_res, get_ocr_result_list, O
 YOLO_LAYOUT_BASE_BATCH_SIZE = 8
 MFD_BASE_BATCH_SIZE = 1
 MFR_BASE_BATCH_SIZE = 16
+OCR_DET_BASE_BATCH_SIZE = 16
 
 
 class BatchAnalyze:
@@ -170,9 +171,9 @@ class BatchAnalyze:
                         batch_images.append(padded_img)
 
                     # 批处理检测
-                    batch_size = min(len(batch_images), self.batch_ratio * 16)  # 增加批处理大小
-                    # logger.debug(f"OCR-det batch: {batch_size} images, target size: {target_h}x{target_w}")
-                    batch_results = ocr_model.text_detector.batch_predict(batch_images, batch_size)
+                    det_batch_size = min(len(batch_images), self.batch_ratio * OCR_DET_BASE_BATCH_SIZE)  # 增加批处理大小
+                    # logger.debug(f"OCR-det batch: {det_batch_size} images, target size: {target_h}x{target_w}")
+                    batch_results = ocr_model.text_detector.batch_predict(batch_images, det_batch_size)
 
                     # 处理批处理结果
                     for i, (crop_info, (dt_boxes, elapse)) in enumerate(zip(group_crops, batch_results)):
@@ -255,9 +256,12 @@ class BatchAnalyze:
                 html_code, table_cell_bboxes, logic_points, elapse = table_model.predict(table_res_dict['table_img'])
                 # 判断是否返回正常
                 if html_code:
-                    expected_ending = html_code.strip().endswith('</html>') or html_code.strip().endswith('</table>')
-                    if expected_ending:
-                        table_res_dict['table_res']['html'] = html_code
+                    # 检查html_code是否包含'<table>'和'</table>'
+                    if '<table>' in html_code and '</table>' in html_code:
+                        # 选用<table>到</table>的内容，放入table_res_dict['table_res']['html']
+                        start_index = html_code.find('<table>')
+                        end_index = html_code.rfind('</table>') + len('</table>')
+                        table_res_dict['table_res']['html'] = html_code[start_index:end_index]
                     else:
                         logger.warning(
                             'table recognition processing fails, not found expected HTML table end'

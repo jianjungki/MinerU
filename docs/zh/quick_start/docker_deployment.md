@@ -10,8 +10,8 @@ docker build -t mineru-sglang:latest -f Dockerfile .
 ```
 
 > [!TIP]
-> [Dockerfile](https://github.com/opendatalab/MinerU/blob/master/docker/china/Dockerfile)默认使用`lmsysorg/sglang:v0.4.8.post1-cu126`作为基础镜像，支持Turing/Ampere/Ada Lovelace/Hopper平台，
-> 如您使用较新的`Blackwell`平台，请将基础镜像修改为`lmsysorg/sglang:v0.4.8.post1-cu128-b200` 再执行build操作。
+> [Dockerfile](https://github.com/opendatalab/MinerU/blob/master/docker/china/Dockerfile)默认使用`lmsysorg/sglang:v0.4.9.post3-cu126`作为基础镜像，支持Turing/Ampere/Ada Lovelace/Hopper平台，
+> 如您使用较新的`Blackwell`平台，请将基础镜像修改为`lmsysorg/sglang:v0.4.9.post3-cu128-b200` 再执行build操作。
 
 ## Docker说明
 
@@ -25,7 +25,7 @@ Mineru的docker使用了`lmsysorg/sglang`作为基础镜像，因此在docker中
 >
 > 如果您的设备不满足上述条件，您仍然可以使用MinerU的其他功能，但无法使用`sglang`加速VLM模型推理，即无法使用`vlm-sglang-engine`后端和启动`vlm-sglang-server`服务。
 
-## 启动 Docker 容器：
+## 启动 Docker 容器
 
 ```bash
 docker run --gpus all \
@@ -58,7 +58,7 @@ wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/docker/compose.yaml
 ### 启动 sglang-server 服务
 并通过`vlm-sglang-client`后端连接`sglang-server`
   ```bash
-  docker compose -f compose.yaml --profile mineru-sglang-server up -d
+  docker compose -f compose.yaml --profile sglang-server up -d
   ```
   >[!TIP]
   >在另一个终端中通过sglang client连接sglang server（只需cpu与网络，不需要sglang环境）
@@ -70,7 +70,7 @@ wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/docker/compose.yaml
 
 ### 启动 Web API 服务
   ```bash
-  docker compose -f compose.yaml --profile mineru-api up -d
+  docker compose -f compose.yaml --profile api up -d
   ```
   >[!TIP]
   >在浏览器中访问 `http://<server_ip>:8000/docs` 查看API文档。
@@ -79,7 +79,7 @@ wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/docker/compose.yaml
 
 ### 启动 Gradio WebUI 服务
   ```bash
-  docker compose -f compose.yaml --profile mineru-gradio up -d
+  docker compose -f compose.yaml --profile gradio up -d
   ```
   >[!TIP]
   > 

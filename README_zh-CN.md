@@ -43,48 +43,168 @@
 </div>
 
 # 更新记录
-- 2025/08/01 2.1.10 发布
-  - 修复`pipeline`后端因block覆盖导致的解析结果与预期不符  #3232
-- 2025/07/30 2.1.9 发布
-  - `transformers` 4.54.1 版本适配
-- 2025/07/28 2.1.8 发布
-  - `sglang` 0.4.9.post5 版本适配
-- 2025/07/27 2.1.7 发布
-  - `transformers` 4.54.0 版本适配
-- 2025/07/26 2.1.6 发布
-  - 修复`vlm`后端解析部分手写文档时的表格异常问题
-  - 修复文档旋转时可视化框位置漂移问题 #3175
-- 2025/07/24 2.1.5 发布
-  - `sglang` 0.4.9 版本适配，同步升级dockerfile基础镜像为sglang 0.4.9.post3
-- 2025/07/23 2.1.4 发布
-  - bug修复
-    - 修复`pipeline`后端中`MFR`步骤在某些情况下显存消耗过大的问题 #2771
-    - 修复某些情况下`image`/`table`与`caption`/`footnote`匹配不准确的问题 #3129
-- 2025/07/16 2.1.1 发布
-  - bug修复 
-    - 修复`pipeline`在某些情况可能发生的文本块内容丢失问题 #3005
-    - 修复`sglang-client`需要安装`torch`等不必要的包的问题 #2968
-    - 更新`dockerfile`以修复linux字体缺失导致的解析文本内容不完整问题 #2915
-  - 易用性更新
-    - 更新`compose.yaml`，便于用户直接启动`sglang-server`、`mineru-api`、`mineru-gradio`服务
-    - 启用全新的[在线文档站点](https://opendatalab.github.io/MinerU/zh/)，简化readme，提供更好的文档体验
-- 2025/07/05 2.1.0 发布
-  - 这是 MinerU 2 的第一个大版本更新，包含了大量新功能和改进，包含众多性能优化、体验优化和bug修复，具体更新内容如下： 
-  - 性能优化： 
-    - 大幅提升某些特定分辨率（长边2000像素左右）文档的预处理速度
-    - 大幅提升`pipeline`后端批量处理大量页数较少（<10）文档时的后处理速度
-    - `pipeline`后端的layout分析速度提升约20%
-  - 体验优化：
-    - 内置开箱即用的`fastapi服务`和`gradio webui`，详细使用方法请参考[文档](https://opendatalab.github.io/MinerU/zh/usage/quick_usage/#apiwebuisglang-clientserver)
-    - `sglang`适配`0.4.8`版本，大幅降低`vlm-sglang`后端的显存要求，最低可在`8G显存`(Turing及以后架构)的显卡上运行
-    - 对所有命令增加`sglang`的参数透传，使得`sglang-engine`后端可以与`sglang-server`一致，接收`sglang`的所有参数
-    - 支持基于配置文件的功能扩展，包含`自定义公式标识符`、`开启标题分级功能`、`自定义本地模型目录`，详细使用方法请参考[文档](https://opendatalab.github.io/MinerU/zh/usage/quick_usage/#mineru_1)
-  - 新特性：  
-    - `pipeline`后端更新 PP-OCRv5 多语种文本识别模型，支持法语、西班牙语、葡萄牙语、俄语、韩语等 37 种语言的文字识别，平均精度涨幅超30%。[详情](https://paddlepaddle.github.io/PaddleOCR/latest/version3.x/algorithm/PP-OCRv5/PP-OCRv5_multi_languages.html)
-    - `pipeline`后端增加对竖排文本的有限支持
+
+- 2025/09/19 2.5.2 发布
+  我们正式发布 MinerU2.5，当前最强文档解析多模态大模型。仅凭 1.2B 参数，MinerU2.5 在 OmniDocBench 文档解析评测中，精度已全面超越 Gemini2.5-Pro、GPT-4o、Qwen2.5-VL-72B等顶级多模态大模型，并显著领先于主流文档解析专用模型（如 dots.ocr, MonkeyOCR, PP-StructureV3 等）。
+  模型已发布至[HuggingFace](https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B)和[ModelScope](https://modelscope.cn/models/opendatalab/MinerU2.5-2509-1.2B)平台，欢迎大家下载使用！
+  - 核心亮点
+    - 极致能效，性能SOTA: 以 1.2B 的轻量化规模，实现了超越百亿乃至千亿级模型的SOTA性能，重新定义了文档解析的能效比。
+    - 先进架构，全面领先: 通过 “两阶段推理” (解耦布局分析与内容识别) 与 原生高分辨率架构 的结合，在布局分析、文本识别、公式识别、表格识别及阅读顺序五大方面均达到 SOTA 水平。
+  - 关键能力提升
+    - 布局检测: 结果更完整，精准覆盖页眉、页脚、页码等非正文内容；同时提供更精准的元素定位与更自然的格式还原（如列表、参考文献）。
+    - 表格解析: 大幅优化了对旋转表格、无线/少线表、以及长难表格的解析能力。
+    - 公式识别: 显著提升中英混合公式及复杂长公式的识别准确率，大幅改善数学类文档解析能力。
+
+  此外，伴随vlm 2.5的发布，我们对仓库做出一些调整：
+  - vlm后端升级至2.5版本，支持MinerU2.5模型，不再兼容MinerU2.0-2505-0.9B模型，最后一个支持2.0模型的版本为mineru-2.2.2。
+  - vlm推理相关代码已移至[mineru_vl_utils](https://github.com/opendatalab/mineru-vl-utils),降低与mineru主仓库的耦合度，便于后续独立迭代。
+  - vlm加速推理框架从`sglang`切换至`vllm`,并实现对vllm生态的完全兼容，使得用户可以在任何支持vllm框架的平台上使用MinerU2.5模型并加速推理。
+  - 由于vlm模型的重大升级，支持更多layout type，因此我们对解析的中间文件`middle.json`和结果文件`content_list.json`的结构做出一些调整，请参考[文档](https://opendatalab.github.io/MinerU/zh/reference/output_files/)了解详情。
+
+  其他仓库优化：
+  - 移除对输入文件的后缀名白名单校验，当输入文件为PDF文档或图片时，对文件的后缀名不再有要求，提升易用性。
 
 <details>
   <summary>历史日志</summary>
+
+  <details>
+    <summary>2025/09/10 2.2.2 发布</summary>
+    <ul>
+      <li>修复新的表格识别模型在部分表格解析失败时影响整体解析任务的问题</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/09/08 2.2.1 发布</summary>
+    <ul>
+      <li>修复使用模型下载命令时，部分新增模型未下载的问题</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/09/05 2.2.0 发布</summary>
+    <ul>
+      <li>
+        主要更新
+        <ul>
+          <li>在这个版本我们重点提升了表格的解析精度，通过引入新的<a href="https://github.com/RapidAI/TableStructureRec">有线表识别模型</a>和全新的混合表格结构解析算法，显著提升了<code>pipeline</code>后端的表格识别能力。</li>
+          <li>另外我们增加了对跨页表格合并的支持，这一功能同时支持<code>pipeline</code>和<code>vlm</code>后端，进一步提升了表格解析的完整性和准确性。</li>
+        </ul>
+      </li>
+      <li>
+        其他更新
+        <ul>
+          <li><code>pipeline</code>后端增加270度旋转的表格解析能力，现已支持0/90/270度三个方向的表格解析</li>
+          <li><code>pipeline</code>增加对泰文、希腊文的ocr能力支持，并更新了英文ocr模型至最新，英文识别精度提升11%，泰文识别模型精度 82.68%，希腊文识别模型精度 89.28%（by PPOCRv5）</li>
+          <li>在输出的<code>content_list.json</code>中增加了<code>bbox</code>字段(映射至0-1000范围内)，方便用户直接获取每个内容块的位置信息</li>
+          <li>移除<code>pipeline_old_linux</code>安装可选项，不再支持老版本的Linux系统如<code>Centos 7</code>等，以便对<code>uv</code>的<code>sync</code>/<code>run</code>等命令进行更好的支持</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/08/01 2.1.10 发布</summary>
+    <ul>
+      <li>修复<code>pipeline</code>后端因block覆盖导致的解析结果与预期不符 #3232</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/30 2.1.9 发布</summary>
+    <ul>
+      <li><code>transformers</code> 4.54.1 版本适配</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/28 2.1.8 发布</summary>
+    <ul>
+      <li><code>sglang</code> 0.4.9.post5 版本适配</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/27 2.1.7 发布</summary>
+    <ul>
+      <li><code>transformers</code> 4.54.0 版本适配</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/26 2.1.6 发布</summary>
+    <ul>
+      <li>修复<code>vlm</code>后端解析部分手写文档时的表格异常问题</li>
+      <li>修复文档旋转时可视化框位置漂移问题 #3175</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/24 2.1.5 发布</summary>
+    <ul>
+      <li><code>sglang</code> 0.4.9 版本适配，同步升级dockerfile基础镜像为sglang 0.4.9.post3</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/23 2.1.4 发布</summary>
+    <ul>
+      <li><strong>bug修复</strong>
+        <ul>
+          <li>修复<code>pipeline</code>后端中<code>MFR</code>步骤在某些情况下显存消耗过大的问题 #2771</li>
+          <li>修复某些情况下<code>image</code>/<code>table</code>与<code>caption</code>/<code>footnote</code>匹配不准确的问题 #3129</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/16 2.1.1 发布</summary>
+    <ul>
+      <li><strong>bug修复</strong>
+        <ul>
+          <li>修复<code>pipeline</code>在某些情况可能发生的文本块内容丢失问题 #3005</li>
+          <li>修复<code>sglang-client</code>需要安装<code>torch</code>等不必要的包的问题 #2968</li>
+          <li>更新<code>dockerfile</code>以修复linux字体缺失导致的解析文本内容不完整问题 #2915</li>
+        </ul>
+      </li>
+      <li><strong>易用性更新</strong>
+        <ul>
+          <li>更新<code>compose.yaml</code>，便于用户直接启动<code>sglang-server</code>、<code>mineru-api</code>、<code>mineru-gradio</code>服务</li>
+          <li>启用全新的<a href="https://opendatalab.github.io/MinerU/zh/">在线文档站点</a>，简化readme，提供更好的文档体验</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/07/05 2.1.0 发布</summary>
+    <p>这是 MinerU 2 的第一个大版本更新，包含了大量新功能和改进，包含众多性能优化、体验优化和bug修复，具体更新内容如下：</p>
+    <ul>
+      <li><strong>性能优化：</strong>
+        <ul>
+          <li>大幅提升某些特定分辨率（长边2000像素左右）文档的预处理速度</li>
+          <li>大幅提升<code>pipeline</code>后端批量处理大量页数较少（&lt;10）文档时的后处理速度</li>
+          <li><code>pipeline</code>后端的layout分析速度提升约20%</li>
+        </ul>
+      </li>
+      <li><strong>体验优化：</strong>
+        <ul>
+          <li>内置开箱即用的<code>fastapi服务</code>和<code>gradio webui</code>，详细使用方法请参考<a href="https://opendatalab.github.io/MinerU/zh/usage/quick_usage/#apiwebuisglang-clientserver">文档</a></li>
+          <li><code>sglang</code>适配<code>0.4.8</code>版本，大幅降低<code>vlm-sglang</code>后端的显存要求，最低可在<code>8G显存</code>(Turing及以后架构)的显卡上运行</li>
+          <li>对所有命令增加<code>sglang</code>的参数透传，使得<code>sglang-engine</code>后端可以与<code>sglang-server</code>一致，接收<code>sglang</code>的所有参数</li>
+          <li>支持基于配置文件的功能扩展，包含<code>自定义公式标识符</code>、<code>开启标题分级功能</code>、<code>自定义本地模型目录</code>，详细使用方法请参考<a href="https://opendatalab.github.io/MinerU/zh/usage/quick_usage/#mineru_1">文档</a></li>
+        </ul>
+      </li>
+      <li><strong>新特性：</strong>
+        <ul>
+          <li><code>pipeline</code>后端更新 PP-OCRv5 多语种文本识别模型，支持法语、西班牙语、葡萄牙语、俄语、韩语等 37 种语言的文字识别，平均精度涨幅超30%。<a href="https://paddlepaddle.github.io/PaddleOCR/latest/version3.x/algorithm/PP-OCRv5/PP-OCRv5_multi_languages.html">详情</a></li>
+          <li><code>pipeline</code>后端增加对竖排文本的有限支持</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+
   <details>
     <summary>2025/06/20 2.0.6发布</summary>
     <ul>
@@ -467,7 +587,7 @@ https://github.com/user-attachments/assets/4bea02c9-6d54-4cd6-97ed-dff14340982c
         <td>解析后端</td>
         <td>pipeline</td>
         <td>vlm-transformers</td>
-        <td>vlm-sglang</td>
+        <td>vlm-vllm</td>
     </tr>
     <tr>
         <td>操作系统</td>
@@ -516,8 +636,8 @@ uv pip install -e .[core] -i https://mirrors.aliyun.com/pypi/simple
 ```
 
 > [!TIP]
-> `mineru[core]`包含除`sglang`加速外的所有核心功能，兼容Windows / Linux / macOS系统，适合绝大多数用户。
-> 如果您有使用`sglang`加速VLM模型推理，或是在边缘设备安装轻量版client端等需求，可以参考文档[扩展模块安装指南](https://opendatalab.github.io/MinerU/zh/quick_start/extension_modules/)。
+> `mineru[core]`包含除`vLLM`加速外的所有核心功能，兼容Windows / Linux / macOS系统，适合绝大多数用户。
+> 如果您有使用`vLLM`加速VLM模型推理，或是在边缘设备安装轻量版client端等需求，可以参考文档[扩展模块安装指南](https://opendatalab.github.io/MinerU/zh/quick_start/extension_modules/)。
 
 ---
  
@@ -545,8 +665,8 @@ mineru -p <input_path> -o <output_path>
 - [x] 手写文本识别
 - [x] 竖排文本识别
 - [x] 拉丁字母重音符号识别
-- [ ] 正文中代码块识别
-- [ ] [化学式识别](docs/chemical_knowledge_introduction/introduction.pdf)
+- [x] 正文中代码块识别
+- [x] [化学式识别](docs/chemical_knowledge_introduction/introduction.pdf)(https://mineru.net)
 - [ ] 图表内容识别
 
 # Known Issues
@@ -584,6 +704,7 @@ mineru -p <input_path> -o <output_path>
 - [DocLayout-YOLO](https://github.com/opendatalab/DocLayout-YOLO)
 - [UniMERNet](https://github.com/opendatalab/UniMERNet)
 - [RapidTable](https://github.com/RapidAI/RapidTable)
+- [TableStructureRec](https://github.com/RapidAI/TableStructureRec)
 - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
 - [PaddleOCR2Pytorch](https://github.com/frotms/PaddleOCR2Pytorch)
 - [layoutreader](https://github.com/ppaanngggg/layoutreader)
@@ -593,6 +714,7 @@ mineru -p <input_path> -o <output_path>
 - [pdftext](https://github.com/datalab-to/pdftext)
 - [pdfminer.six](https://github.com/pdfminer/pdfminer.six)
 - [pypdf](https://github.com/py-pdf/pypdf)
+- [magika](https://github.com/google/magika)
 
 # Citation
 
@@ -635,3 +757,4 @@ mineru -p <input_path> -o <output_path>
 - [OmniDocBench (A Comprehensive Benchmark for Document Parsing and Evaluation)](https://github.com/opendatalab/OmniDocBench)
 - [Magic-HTML (Mixed web page extraction tool)](https://github.com/opendatalab/magic-html)
 - [Magic-Doc (Fast speed ppt/pptx/doc/docx/pdf extraction tool)](https://github.com/InternLM/magic-doc) 
+- [Dingo: A Comprehensive AI Data Quality Evaluation Tool](https://github.com/MigoXLab/dingo)

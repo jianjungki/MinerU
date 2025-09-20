@@ -43,48 +43,170 @@
 </div>
 
 # Changelog
-- 2025/08/01 2.1.10 Released
-  - Fixed an issue in the `pipeline` backend where block overlap caused the parsing results to deviate from expectations #3232
-- 2025/07/30 2.1.9 Released
-  - `transformers` 4.54.1 version adaptation
-- 2025/07/28 2.1.8 Released
-  - `sglang` 0.4.9.post5 version adaptation
-- 2025/07/27 2.1.7 Released
-  - `transformers` 4.54.0 version adaptation
-- 2025/07/26 2.1.6 Released
-  - Fixed table parsing issues in handwritten documents when using `vlm` backend
-  - Fixed visualization box position drift issue when document is rotated #3175
-- 2025/07/24 2.1.5 Released
-  - `sglang` 0.4.9 version adaptation, synchronously upgrading the dockerfile base image to sglang 0.4.9.post3
-- 2025/07/23 2.1.4 Released
-  - Bug Fixes
-    - Fixed the issue of excessive memory consumption during the `MFR` step in the `pipeline` backend under certain scenarios #2771
-    - Fixed the inaccurate matching between `image`/`table` and `caption`/`footnote` under certain conditions #3129
-- 2025/07/16 2.1.1 Released
-  - Bug fixes
-    - Fixed text block content loss issue that could occur in certain `pipeline` scenarios #3005
-    - Fixed issue where `sglang-client` required unnecessary packages like `torch` #2968
-    - Updated `dockerfile` to fix incomplete text content parsing due to missing fonts in Linux #2915
-  - Usability improvements
-    - Updated `compose.yaml` to facilitate direct startup of `sglang-server`, `mineru-api`, and `mineru-gradio` services
-    - Launched brand new [online documentation site](https://opendatalab.github.io/MinerU/), simplified readme, providing better documentation experience
-- 2025/07/05 Version 2.1.0 Released
-  - This is the first major update of MinerU 2, which includes a large number of new features and improvements, covering significant performance optimizations, user experience enhancements, and bug fixes. The detailed update contents are as follows:
-  - **Performance Optimizations:**
-    - Significantly improved preprocessing speed for documents with specific resolutions (around 2000 pixels on the long side).
-    - Greatly enhanced post-processing speed when the `pipeline` backend handles batch processing of documents with fewer pages (<10 pages).
-    - Layout analysis speed of the `pipeline` backend has been increased by approximately 20%.
-  - **Experience Enhancements:**
-    - Built-in ready-to-use `fastapi service` and `gradio webui`. For detailed usage instructions, please refer to [Documentation](https://opendatalab.github.io/MinerU/usage/quick_usage/#advanced-usage-via-api-webui-sglang-clientserver).
-    - Adapted to `sglang` version `0.4.8`, significantly reducing the GPU memory requirements for the `vlm-sglang` backend. It can now run on graphics cards with as little as `8GB GPU memory` (Turing architecture or newer).
-    - Added transparent parameter passing for all commands related to `sglang`, allowing the `sglang-engine` backend to receive all `sglang` parameters consistently with the `sglang-server`.
-    - Supports feature extensions based on configuration files, including `custom formula delimiters`, `enabling heading classification`, and `customizing local model directories`. For detailed usage instructions, please refer to [Documentation](https://opendatalab.github.io/MinerU/usage/quick_usage/#extending-mineru-functionality-with-configuration-files).
-  - **New Features:**
-    - Updated the `pipeline` backend with the PP-OCRv5 multilingual text recognition model, supporting text recognition in 37 languages such as French, Spanish, Portuguese, Russian, and Korean, with an average accuracy improvement of over 30%. [Details](https://paddlepaddle.github.io/PaddleOCR/latest/en/version3.x/algorithm/PP-OCRv5/PP-OCRv5_multi_languages.html)
-    - Introduced limited support for vertical text layout in the `pipeline` backend.
+
+- 2025/09/19 2.5.2 Released
+
+  We are officially releasing MinerU2.5, currently the most powerful multimodal large model for document parsing.
+  With only 1.2B parameters, MinerU2.5's accuracy on the OmniDocBench benchmark comprehensively surpasses top-tier multimodal models like Gemini 2.5 Pro, GPT-4o, and Qwen2.5-VL-72B. It also significantly outperforms leading specialized models such as dots.ocr, MonkeyOCR, and PP-StructureV3.
+  The model has been released on [HuggingFace](https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B) and [ModelScope](https://modelscope.cn/models/opendatalab/MinerU2.5-2509-1.2B) platforms. Welcome to download and use!
+  - Core Highlights:
+    - SOTA Performance with Extreme Efficiency: As a 1.2B model, it achieves State-of-the-Art (SOTA) results that exceed models in the 10B and 100B+ classes, redefining the performance-per-parameter standard in document AI.
+    - Advanced Architecture for Across-the-Board Leadership: By combining a two-stage inference pipeline (decoupling layout analysis from content recognition) with a native high-resolution architecture, it achieves SOTA performance across five key areas: layout analysis, text recognition, formula recognition, table recognition, and reading order.
+  - Key Capability Enhancements:
+    - Layout Detection: Delivers more complete results by accurately covering non-body content like headers, footers, and page numbers. It also provides more precise element localization and natural format reconstruction for lists and references.
+    - Table Parsing: Drastically improves parsing for challenging cases, including rotated tables, borderless/semi-structured tables, and long/complex tables.
+    - Formula Recognition: Significantly boosts accuracy for complex, long-form, and hybrid Chinese-English formulas, greatly enhancing the parsing capability for mathematical documents.
+
+  Additionally, with the release of vlm 2.5, we have made some adjustments to the repository:
+  - The vlm backend has been upgraded to version 2.5, supporting the MinerU2.5 model and no longer compatible with the MinerU2.0-2505-0.9B model. The last version supporting the 2.0 model is mineru-2.2.2.
+  - VLM inference-related code has been moved to [mineru_vl_utils](https://github.com/opendatalab/mineru-vl-utils), reducing coupling with the main mineru repository and facilitating independent iteration in the future.
+  - The vlm accelerated inference framework has been switched from `sglang` to `vllm`, achieving full compatibility with the vllm ecosystem, allowing users to use the MinerU2.5 model and accelerated inference on any platform that supports the vllm framework.
+  - Due to major upgrades in the vlm model supporting more layout types, we have made some adjustments to the structure of the parsing intermediate file `middle.json` and result file `content_list.json`. Please refer to the [documentation](https://opendatalab.github.io/MinerU/reference/output_files/) for details.
+
+  Other repository optimizations:
+  - Removed file extension whitelist validation for input files. When input files are PDF documents or images, there are no longer requirements for file extensions, improving usability.
 
 <details>
   <summary>History Log</summary>
+
+  <details>
+    <summary>2025/09/10 2.2.2 Released</summary>
+    <ul>
+      <li>Fixed the issue where the new table recognition model would affect the overall parsing task when some table parsing failed</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/09/08 2.2.1 Released</summary>
+    <ul>
+      <li>Fixed the issue where some newly added models were not downloaded when using the model download command.</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/09/05 2.2.0 Released</summary>
+    <ul>
+      <li>
+        Major Updates
+        <ul>
+          <li>In this version, we focused on improving table parsing accuracy by introducing a new <a href="https://github.com/RapidAI/TableStructureRec">wired table recognition model</a> and a brand-new hybrid table structure parsing algorithm, significantly enhancing the table recognition capabilities of the <code>pipeline</code> backend.</li>
+          <li>We also added support for cross-page table merging, which is supported by both <code>pipeline</code> and <code>vlm</code> backends, further improving the completeness and accuracy of table parsing.</li>
+        </ul>
+      </li>
+      <li>
+        Other Updates
+        <ul>
+          <li>The <code>pipeline</code> backend now supports 270-degree rotated table parsing, bringing support for table parsing in 0/90/270-degree orientations</li>
+          <li><code>pipeline</code> added OCR capability support for Thai and Greek, and updated the English OCR model to the latest version. English recognition accuracy improved by 11%, Thai recognition model accuracy is 82.68%, and Greek recognition model accuracy is 89.28% (by PPOCRv5)</li>
+          <li>Added <code>bbox</code> field (mapped to 0-1000 range) in the output <code>content_list.json</code>, making it convenient for users to directly obtain position information for each content block</li>
+          <li>Removed the <code>pipeline_old_linux</code> installation option, no longer supporting legacy Linux systems such as <code>CentOS 7</code>, to provide better support for <code>uv</code>'s <code>sync</code>/<code>run</code> commands</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2025/08/01 2.1.10 Released</summary>
+    <ul>
+      <li>Fixed an issue in the <code>pipeline</code> backend where block overlap caused the parsing results to deviate from expectations #3232</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/30 2.1.9 Released</summary>
+    <ul>
+      <li><code>transformers</code> 4.54.1 version adaptation</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/28 2.1.8 Released</summary>
+    <ul>
+      <li><code>sglang</code> 0.4.9.post5 version adaptation</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/27 2.1.7 Released</summary>
+    <ul>
+      <li><code>transformers</code> 4.54.0 version adaptation</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/26 2.1.6 Released</summary>
+    <ul>
+      <li>Fixed table parsing issues in handwritten documents when using <code>vlm</code> backend</li>
+      <li>Fixed visualization box position drift issue when document is rotated #3175</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/24 2.1.5 Released</summary>
+    <ul>
+      <li><code>sglang</code> 0.4.9 version adaptation, synchronously upgrading the dockerfile base image to sglang 0.4.9.post3</li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/23 2.1.4 Released</summary>
+    <ul>
+      <li><strong>Bug Fixes</strong>
+        <ul>
+          <li>Fixed the issue of excessive memory consumption during the <code>MFR</code> step in the <code>pipeline</code> backend under certain scenarios #2771</li>
+          <li>Fixed the inaccurate matching between <code>image</code>/<code>table</code> and <code>caption</code>/<code>footnote</code> under certain conditions #3129</li>
+        </ul>
+      </li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/16 2.1.1 Released</summary>
+    <ul>
+      <li><strong>Bug fixes</strong>
+        <ul>
+          <li>Fixed text block content loss issue that could occur in certain <code>pipeline</code> scenarios #3005</li>
+          <li>Fixed issue where <code>sglang-client</code> required unnecessary packages like <code>torch</code> #2968</li>
+          <li>Updated <code>dockerfile</code> to fix incomplete text content parsing due to missing fonts in Linux #2915</li>
+        </ul>
+      </li>
+      <li><strong>Usability improvements</strong>
+        <ul>
+          <li>Updated <code>compose.yaml</code> to facilitate direct startup of <code>sglang-server</code>, <code>mineru-api</code>, and <code>mineru-gradio</code> services</li>
+          <li>Launched brand new <a href="https://opendatalab.github.io/MinerU/">online documentation site</a>, simplified readme, providing better documentation experience</li>
+        </ul>
+      </li>
+    </ul>
+  </details>  
+
+  <details>
+    <summary>2025/07/05 2.1.0 Released</summary>
+    <ul>
+      <li>This is the first major update of MinerU 2, which includes a large number of new features and improvements, covering significant performance optimizations, user experience enhancements, and bug fixes. The detailed update contents are as follows:</li>
+      <li><strong>Performance Optimizations:</strong>
+        <ul>
+          <li>Significantly improved preprocessing speed for documents with specific resolutions (around 2000 pixels on the long side).</li>
+          <li>Greatly enhanced post-processing speed when the <code>pipeline</code> backend handles batch processing of documents with fewer pages (&lt;10 pages).</li>
+          <li>Layout analysis speed of the <code>pipeline</code> backend has been increased by approximately 20%.</li>
+        </ul>
+      </li>
+      <li><strong>Experience Enhancements:</strong>
+        <ul>
+          <li>Built-in ready-to-use <code>fastapi service</code> and <code>gradio webui</code>. For detailed usage instructions, please refer to <a href="https://opendatalab.github.io/MinerU/usage/quick_usage/#advanced-usage-via-api-webui-sglang-clientserver">Documentation</a>.</li>
+          <li>Adapted to <code>sglang</code> version <code>0.4.8</code>, significantly reducing the GPU memory requirements for the <code>vlm-sglang</code> backend. It can now run on graphics cards with as little as <code>8GB GPU memory</code> (Turing architecture or newer).</li>
+          <li>Added transparent parameter passing for all commands related to <code>sglang</code>, allowing the <code>sglang-engine</code> backend to receive all <code>sglang</code> parameters consistently with the <code>sglang-server</code>.</li>
+          <li>Supports feature extensions based on configuration files, including <code>custom formula delimiters</code>, <code>enabling heading classification</code>, and <code>customizing local model directories</code>. For detailed usage instructions, please refer to <a href="https://opendatalab.github.io/MinerU/usage/quick_usage/#extending-mineru-functionality-with-configuration-files">Documentation</a>.</li>
+        </ul>
+      </li>
+      <li><strong>New Features:</strong>
+        <ul>
+          <li>Updated the <code>pipeline</code> backend with the PP-OCRv5 multilingual text recognition model, supporting text recognition in 37 languages such as French, Spanish, Portuguese, Russian, and Korean, with an average accuracy improvement of over 30%. <a href="https://paddlepaddle.github.io/PaddleOCR/latest/en/version3.x/algorithm/PP-OCRv5/PP-OCRv5_multi_languages.html">Details</a></li>
+          <li>Introduced limited support for vertical text layout in the <code>pipeline</code> backend.</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+
   <details>
     <summary>2025/06/20 2.0.6 Released</summary>
     <ul>
@@ -518,7 +640,7 @@ A WebUI developed based on Gradio, with a simple interface and only core parsing
         <td>Parsing Backend</td>
         <td>pipeline</td>
         <td>vlm-transformers</td>
-        <td>vlm-sglang</td>
+        <td>vlm-vllm</td>
     </tr>
     <tr>
         <td>Operating System</td>
@@ -567,8 +689,8 @@ uv pip install -e .[core]
 ```
 
 > [!TIP]
-> `mineru[core]` includes all core features except `sglang` acceleration, compatible with Windows / Linux / macOS systems, suitable for most users.
-> If you need to use `sglang` acceleration for VLM model inference or install a lightweight client on edge devices, please refer to the documentation [Extension Modules Installation Guide](https://opendatalab.github.io/MinerU/quick_start/extension_modules/).
+> `mineru[core]` includes all core features except `vLLM` acceleration, compatible with Windows / Linux / macOS systems, suitable for most users.
+> If you need to use `vLLM` acceleration for VLM model inference or install a lightweight client on edge devices, please refer to the documentation [Extension Modules Installation Guide](https://opendatalab.github.io/MinerU/quick_start/extension_modules/).
 
 ---
  
@@ -596,8 +718,8 @@ You can use MinerU for PDF parsing through various methods such as command line,
 - [x] Handwritten Text Recognition  
 - [x] Vertical Text Recognition  
 - [x] Latin Accent Mark Recognition
-- [ ] Code block recognition in the main text
-- [ ] [Chemical formula recognition](docs/chemical_knowledge_introduction/introduction.pdf)
+- [x] Code block recognition in the main text
+- [x] [Chemical formula recognition](docs/chemical_knowledge_introduction/introduction.pdf)(mineru.net)
 - [ ] Geometric shape recognition
 
 # Known Issues
@@ -635,6 +757,7 @@ Currently, some models in this project are trained based on YOLO. However, since
 - [DocLayout-YOLO](https://github.com/opendatalab/DocLayout-YOLO)
 - [UniMERNet](https://github.com/opendatalab/UniMERNet)
 - [RapidTable](https://github.com/RapidAI/RapidTable)
+- [TableStructureRec](https://github.com/RapidAI/TableStructureRec)
 - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
 - [PaddleOCR2Pytorch](https://github.com/frotms/PaddleOCR2Pytorch)
 - [layoutreader](https://github.com/ppaanngggg/layoutreader)
@@ -644,6 +767,7 @@ Currently, some models in this project are trained based on YOLO. However, since
 - [pdftext](https://github.com/datalab-to/pdftext)
 - [pdfminer.six](https://github.com/pdfminer/pdfminer.six)
 - [pypdf](https://github.com/py-pdf/pypdf)
+- [magika](https://github.com/google/magika)
 
 # Citation
 
@@ -686,3 +810,4 @@ Currently, some models in this project are trained based on YOLO. However, since
 - [OmniDocBench (A Comprehensive Benchmark for Document Parsing and Evaluation)](https://github.com/opendatalab/OmniDocBench)
 - [Magic-HTML (Mixed web page extraction tool)](https://github.com/opendatalab/magic-html)
 - [Magic-Doc (Fast speed ppt/pptx/doc/docx/pdf extraction tool)](https://github.com/InternLM/magic-doc) 
+- [Dingo: A Comprehensive AI Data Quality Evaluation Tool](https://github.com/MigoXLab/dingo)

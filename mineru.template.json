@@ -17,7 +17,8 @@
         "title_aided": {
             "api_key": "your_api_key",
             "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-            "model": "qwen2.5-32b-instruct",
+            "model": "qwen3-next-80b-a3b-instruct",
+            "enable_thinking": false,
             "enable": false
         }
     },
@@ -25,5 +26,5 @@
         "pipeline": "",
         "vlm": ""
     },
-    "config_version": "1.3.0"
+    "config_version": "1.3.1"
 }

@@ -99,7 +99,10 @@ def doc_analyze(
         _lang = lang_list[pdf_idx]
 
         # 收集每个数据集中的页面
+        # load_images_start = time.time()
         images_list, pdf_doc = load_images_from_pdf(pdf_bytes, image_type=ImageType.PIL)
+        # load_images_time = round(time.time() - load_images_start, 2)
+        # logger.debug(f"load images cost: {load_images_time}, speed: {round(len(images_list) / load_images_time, 3)} images/s")
         all_image_lists.append(images_list)
         all_pdf_docs.append(pdf_doc)
         for page_idx in range(len(images_list)):
@@ -156,7 +159,6 @@ def batch_image_analyze(
 
     model_manager = ModelSingleton()
 
-    batch_ratio = 1
     device = get_device()
 
     if str(device).startswith('npu'):
@@ -170,25 +172,21 @@ def batch_image_analyze(
                 "Please ensure that the torch_npu package is installed correctly."
             ) from e
 
-    if str(device).startswith('npu') or str(device).startswith('cuda'):
-        vram = get_vram(device)
-        if vram is not None:
-            gpu_memory = int(os.getenv('MINERU_VIRTUAL_VRAM_SIZE', round(vram)))
-            if gpu_memory >= 16:
-                batch_ratio = 16
-            elif gpu_memory >= 12:
-                batch_ratio = 8
-            elif gpu_memory >= 8:
-                batch_ratio = 4
-            elif gpu_memory >= 6:
-                batch_ratio = 2
-            else:
-                batch_ratio = 1
-            logger.info(f'gpu_memory: {gpu_memory} GB, batch_ratio: {batch_ratio}')
-        else:
-            # Default batch_ratio when VRAM can't be determined
-            batch_ratio = 1
-            logger.info(f'Could not determine GPU memory, using default batch_ratio: {batch_ratio}')
+    gpu_memory = get_vram(device)
+    if gpu_memory >= 16:
+        batch_ratio = 16
+    elif gpu_memory >= 12:
+        batch_ratio = 8
+    elif gpu_memory >= 8:
+        batch_ratio = 4
+    elif gpu_memory >= 6:
+        batch_ratio = 2
+    else:
+        batch_ratio = 1
+    logger.info(
+            f'GPU Memory: {gpu_memory} GB, Batch Ratio: {batch_ratio}. '
+            f'You can set MINERU_VIRTUAL_VRAM_SIZE environment variable to adjust GPU memory allocation.'
+    )
 
     # 检测torch的版本号
     import torch

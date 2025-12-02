@@ -4,12 +4,18 @@ import click
 from pathlib import Path
 from loguru import logger
 
+from mineru.utils.check_sys_env import is_mac_os_version_supported
 from mineru.utils.cli_parser import arg_parse
 from mineru.utils.config_reader import get_device
 from mineru.utils.guess_suffix_or_lang import guess_suffix_by_path
 from mineru.utils.model_utils import get_vram
 from ..version import __version__
 from .common import do_parse, read_fn, pdf_suffixes, image_suffixes
+
+
+backends = ['pipeline', 'vlm-transformers', 'vlm-vllm-engine', 'vlm-lmdeploy-engine', 'vlm-http-client']
+if is_mac_os_version_supported():
+    backends.append("vlm-mlx-engine")
 
 @click.command(context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
 @click.pass_context
@@ -38,25 +44,29 @@ from .common import do_parse, read_fn, pdf_suffixes, image_suffixes
     '--method',
     'method',
     type=click.Choice(['auto', 'txt', 'ocr']),
-    help="""the method for parsing pdf:
-    auto: Automatically determine the method based on the file type.
-    txt: Use text extraction method.
-    ocr: Use OCR method for image-based PDFs.
+    help="""\b
+    the method for parsing pdf:
+      auto: Automatically determine the method based on the file type.
+      txt: Use text extraction method.
+      ocr: Use OCR method for image-based PDFs.
     Without method specified, 'auto' will be used by default.
-    Adapted only for the case where the backend is set to "pipeline".""",
+    Adapted only for the case where the backend is set to 'pipeline'.""",
     default='auto',
 )
 @click.option(
     '-b',
     '--backend',
     'backend',
-    type=click.Choice(['pipeline', 'vlm-transformers', 'vlm-vllm-engine', 'vlm-http-client']),
-    help="""the backend for parsing pdf:
-    pipeline: More general.
-    vlm-transformers: More general.
-    vlm-vllm-engine: Faster(engine).
-    vlm-http-client: Faster(client).
-    without method specified, pipeline will be used by default.""",
+    type=click.Choice(backends),
+    help="""\b
+    the backend for parsing pdf:
+      pipeline: More general.
+      vlm-transformers: More general, but slower.
+      vlm-mlx-engine: Faster than transformers(macOS 13.5+).
+      vlm-vllm-engine: Faster(vllm-engine).
+      vlm-lmdeploy-engine: Faster(lmdeploy-engine).
+      vlm-http-client: Faster(client suitable for openai-compatible servers).
+    Without method specified, pipeline will be used by default.""",
     default='pipeline',
 )
 @click.option(
@@ -66,7 +76,7 @@ from .common import do_parse, read_fn, pdf_suffixes, image_suffixes
     type=click.Choice(['ch', 'ch_server', 'ch_lite', 'en', 'korean', 'japan', 'chinese_cht', 'ta', 'te', 'ka', 'th', 'el',
                        'latin', 'arabic', 'east_slavic', 'cyrillic', 'devanagari']),
     help="""
-    Input the languages in the pdf (if known) to improve OCR accuracy.  Optional.
+    Input the languages in the pdf (if known) to improve OCR accuracy.
     Without languages specified, 'ch' will be used by default.
     Adapted only for the case where the backend is set to "pipeline".
     """,
@@ -103,7 +113,7 @@ from .common import do_parse, read_fn, pdf_suffixes, image_suffixes
     '--formula',
     'formula_enable',
     type=bool,
-    help='Enable formula parsing. Default is True. Adapted only for the case where the backend is set to "pipeline".',
+    help='Enable formula parsing. Default is True. ',
     default=True,
 )
 @click.option(
@@ -111,7 +121,7 @@ from .common import do_parse, read_fn, pdf_suffixes, image_suffixes
     '--table',
     'table_enable',
     type=bool,
-    help='Enable table parsing. Default is True. Adapted only for the case where the backend is set to "pipeline".',
+    help='Enable table parsing. Default is True. ',
     default=True,
 )
 @click.option(
@@ -119,7 +129,8 @@ from .common import do_parse, read_fn, pdf_suffixes, image_suffixes
     '--device',
     'device_mode',
     type=str,
-    help='Device mode for model inference, e.g., "cpu", "cuda", "cuda:0", "npu", "npu:0", "mps". Adapted only for the case where the backend is set to "pipeline". ',
+    help="""Device mode for model inference, e.g., "cpu", "cuda", "cuda:0", "npu", "npu:0", "mps".
+         Adapted only for the case where the backend is set to "pipeline" and "vlm-transformers". """,
     default=None,
 )
 @click.option(
@@ -161,9 +172,8 @@ def main(
         def get_virtual_vram_size() -> int:
             if virtual_vram is not None:
                 return virtual_vram
-            if get_device_mode().startswith("cuda") or get_device_mode().startswith("npu"):
-                return round(get_vram(get_device_mode()))
-            return 1
+            else:
+                return get_vram(get_device_mode())
         if os.getenv('MINERU_VIRTUAL_VRAM_SIZE', None) is None:
             os.environ['MINERU_VIRTUAL_VRAM_SIZE']= str(get_virtual_vram_size())
 

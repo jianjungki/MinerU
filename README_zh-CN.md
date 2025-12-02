@@ -1,7 +1,7 @@
 <div align="center" xmlns="http://www.w3.org/1999/html">
 <!-- logo -->
 <p align="center">
-  <img src="docs/images/MinerU-logo.png" width="300px" style="vertical-align:middle;">
+  <img src="https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/docs/images/MinerU-logo.png" width="300px" style="vertical-align:middle;">
 </p>
 
 <!-- icon -->
@@ -18,7 +18,8 @@
 [![ModelScope](https://img.shields.io/badge/Demo_on_ModelScope-purple?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIzIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KCiA8Zz4KICA8dGl0bGU+TGF5ZXIgMTwvdGl0bGU+CiAgPHBhdGggaWQ9InN2Z18xNCIgZmlsbD0iIzYyNGFmZiIgZD0ibTAsODkuODRsMjUuNjUsMGwwLDI1LjY0OTk5bC0yNS42NSwwbDAsLTI1LjY0OTk5eiIvPgogIDxwYXRoIGlkPSJzdmdfMTUiIGZpbGw9IiM2MjRhZmYiIGQ9Im05OS4xNCwxMTUuNDlsMjUuNjUsMGwwLDI1LjY1bC0yNS42NSwwbDAsLTI1LjY1eiIvPgogIDxwYXRoIGlkPSJzdmdfMTYiIGZpbGw9IiM2MjRhZmYiIGQ9Im0xNzYuMDksMTQxLjE0bC0yNS42NDk5OSwwbDAsMjIuMTlsNDcuODQsMGwwLC00Ny44NGwtMjIuMTksMGwwLDI1LjY1eiIvPgogIDxwYXRoIGlkPSJzdmdfMTciIGZpbGw9IiMzNmNmZDEiIGQ9Im0xMjQuNzksODkuODRsMjUuNjUsMGwwLDI1LjY0OTk5bC0yNS42NSwwbDAsLTI1LjY0OTk5eiIvPgogIDxwYXRoIGlkPSJzdmdfMTgiIGZpbGw9IiMzNmNmZDEiIGQ9Im0wLDY0LjE5bDI1LjY1LDBsMCwyNS42NWwtMjUuNjUsMGwwLC0yNS42NXoiLz4KICA8cGF0aCBpZD0ic3ZnXzE5IiBmaWxsPSIjNjI0YWZmIiBkPSJtMTk4LjI4LDg5Ljg0bDI1LjY0OTk5LDBsMCwyNS42NDk5OWwtMjUuNjQ5OTksMGwwLC0yNS42NDk5OXoiLz4KICA8cGF0aCBpZD0ic3ZnXzIwIiBmaWxsPSIjMzZjZmQxIiBkPSJtMTk4LjI4LDY0LjE5bDI1LjY0OTk5LDBsMCwyNS42NWwtMjUuNjQ5OTksMGwwLC0yNS42NXoiLz4KICA8cGF0aCBpZD0ic3ZnXzIxIiBmaWxsPSIjNjI0YWZmIiBkPSJtMTUwLjQ0LDQybDAsMjIuMTlsMjUuNjQ5OTksMGwwLDI1LjY1bDIyLjE5LDBsMCwtNDcuODRsLTQ3Ljg0LDB6Ii8+CiAgPHBhdGggaWQ9InN2Z18yMiIgZmlsbD0iIzM2Y2ZkMSIgZD0ibTczLjQ5LDg5Ljg0bDI1LjY1LDBsMCwyNS42NDk5OWwtMjUuNjUsMGwwLC0yNS42NDk5OXoiLz4KICA8cGF0aCBpZD0ic3ZnXzIzIiBmaWxsPSIjNjI0YWZmIiBkPSJtNDcuODQsNjQuMTlsMjUuNjUsMGwwLC0yMi4xOWwtNDcuODQsMGwwLDQ3Ljg0bDIyLjE5LDBsMCwtMjUuNjV6Ii8+CiAgPHBhdGggaWQ9InN2Z18yNCIgZmlsbD0iIzYyNGFmZiIgZD0ibTQ3Ljg0LDExNS40OWwtMjIuMTksMGwwLDQ3Ljg0bDQ3Ljg0LDBsMCwtMjIuMTlsLTI1LjY1LDBsMCwtMjUuNjV6Ii8+CiA8L2c+Cjwvc3ZnPg==&labelColor=white)](https://www.modelscope.cn/studios/OpenDataLab/MinerU)
 [![HuggingFace](https://img.shields.io/badge/Demo_on_HuggingFace-yellow.svg?logo=data:image/png;base64,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&labelColor=white)](https://huggingface.co/spaces/opendatalab/MinerU)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/gist/myhloli/a3cb16570ab3cfeadf9d8f0ac91b4fca/mineru_demo.ipynb)
-[![arXiv](https://img.shields.io/badge/arXiv-2409.18839-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2409.18839)
+[![arXiv](https://img.shields.io/badge/MinerU-Technical%20Report-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2409.18839)
+[![arXiv](https://img.shields.io/badge/MinerU2.5-Technical%20Report-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2509.22186)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/opendatalab/MinerU)
 
 
@@ -43,6 +44,52 @@
 </div>
 
 # 更新记录
+
+- 2025/12/02 2.6.6 发布
+  - `Ascend`适配优化
+    - 优化命令行工具初始化流程，使Ascend适配方案中`vlm-vllm-engine`后端在命令行工具中可用。
+    - 为Atlas 300I Duo(310p)设备更新适配文档。
+  - `mineru-api`工具优化
+    - 为`mineru-api`接口参数增加描述性文本，优化接口文档可读性。
+    - 可通过环境变量`MINERU_API_ENABLE_FASTAPI_DOCS`控制是否启用自动生成的接口文档页面，默认为启用。
+    - 为`vlm-vllm-async-engine`、`vlm-lmdeploy-engine`、`vlm-http-client`后端增加并发数配置选项，用户可通过环境变量`MINERU_API_MAX_CONCURRENT_REQUESTS`控制api接口的最大并发请求数，默认为不限制数量。
+
+- 2025/11/26 2.6.5 发布
+  - 增加新后端`vlm-lmdeploy-engine`支持，使用方式与`vlm-vllm-(async)engine`类似，但使用`lmdeploy`作为推理引擎，与`vllm`相比额外支持Windows平台原生推理加速。
+  - 新增国产算力平台`昇腾/npu`、`平头哥/ppu`、`沐曦/maca`的适配支持，用户可在对应平台上使用`pipeline`与`vlm`模型，并使用`vllm`/`lmdeploy`引擎加速vlm模型推理，具体使用方式请参考[其他加速卡适配](https://opendatalab.github.io/MinerU/zh/usage/)。
+    - 国产平台适配不易，我们已尽量确保适配的完整性和稳定性，但仍可能存在一些稳定性/兼容问题与精度对齐问题，请大家根据适配文档页面内红绿灯情况自行选择合适的环境与场景进行使用。
+    - 如在使用国产化平台适配方案的过程中遇到任何文档未提及的问题，为便于其他用户查找解决方案，请在discussions的[指定帖子](https://github.com/opendatalab/MinerU/discussions/4064)中进行反馈。
+
+- 2025/11/04 2.6.4 发布
+  - 为pdf渲染图片增加超时配置，默认为300秒，可通过环境变量`MINERU_PDF_RENDER_TIMEOUT`进行配置，防止部分异常pdf文件导致渲染过程长时间阻塞。
+  - 为onnx模型增加cpu线程数配置选项，默认为系统cpu核心数，可通过环境变量`MINERU_INTRA_OP_NUM_THREADS`和`MINERU_INTER_OP_NUM_THREADS`进行配置，以减少高并发场景下的对cpu资源的抢占冲突。
+
+- 2025/10/31 2.6.3 发布
+  - 增加新后端`vlm-mlx-engine`支持，在Apple Silicon设备上支持使用`MLX`加速`MinerU2.5`模型推理，相比`vlm-transformers`后端，`vlm-mlx-engine`后端速度提升100%~200%。
+  - bug修复:  #3849  #3859
+
+- 2025/10/24 2.6.2 发布
+  - `pipline`后端优化
+    - 增加对中文公式的实验性支持，可通过配置环境变量`export MINERU_FORMULA_CH_SUPPORT=1`开启。该功能可能会导致MFR速率略微下降、部分长公式识别失败等问题，建议仅在需要解析中文公式的场景下开启。如需关闭该功能，可将环境变量设置为`0`。
+    - `OCR`速度大幅提升200%~300%，感谢 [@cjsdurj](https://github.com/cjsdurj) 提供的优化方案
+    - `OCR`模型优化拉丁文识别的准度和广度，并更新西里尔文(cyrillic)、阿拉伯文(arabic)、天城文(devanagari)、泰卢固语(te)、泰米尔语(ta)语系至`ppocr-v5`版本，精度相比上代模型提升40%以上
+  - `vlm`后端优化
+    - `table_caption`、`table_footnote`匹配逻辑优化，提升页内多张连续表场景下的表格标题和脚注的匹配准确率和阅读顺序合理性
+    - 优化使用`vllm`后端时高并发时的cpu资源占用，降低服务端压力
+    - 适配`vllm`0.11.0版本
+  - 通用优化
+    - 跨页表格合并效果优化，新增跨页续表合并支持，提升在多列合并场景下的表格合并效果
+    - 为表格合并功能增加环境变量配置选项`MINERU_TABLE_MERGE_ENABLE`，表格合并功能默认开启，可通过设置该变量为`0`来关闭表格合并功能
+    
+- 2025/09/26 2.5.4 发布
+  - 🎉🎉 MinerU2.5[技术报告](https://arxiv.org/abs/2509.22186)现已发布，欢迎阅读全面了解其模型架构、训练策略、数据工程和评测结果。
+  - 修复部分`pdf`文件被识别成`ai`文件导致无法解析的问题
+
+- 2025/09/20 2.5.3 发布
+  - 依赖版本范围调整，使得Turing及更早架构显卡可以使用vLLM加速推理MinerU2.5模型。
+  - `pipeline`后端对torch 2.8.0的一些兼容性修复。
+  - 降低vLLM异步后端默认的并发数，降低服务端压力以避免高压导致的链接关闭问题。
+  - 更多兼容性相关内容详见[公告](https://github.com/opendatalab/MinerU/discussions/3547)
 
 - 2025/09/19 2.5.2 发布
   我们正式发布 MinerU2.5，当前最强文档解析多模态大模型。仅凭 1.2B 参数，MinerU2.5 在 OmniDocBench 文档解析评测中，精度已全面超越 Gemini2.5-Pro、GPT-4o、Qwen2.5-VL-72B等顶级多模态大模型，并显著领先于主流文档解析专用模型（如 dots.ocr, MonkeyOCR, PP-StructureV3 等）。
@@ -547,7 +594,7 @@ https://github.com/user-attachments/assets/4bea02c9-6d54-4cd6-97ed-dff14340982c
 - 自动识别并转换文档中的公式为LaTeX格式
 - 自动识别并转换文档中的表格为HTML格式
 - 自动检测扫描版PDF和乱码PDF，并启用OCR功能
-- OCR支持84种语言的检测与识别
+- OCR支持109种语言的检测与识别
 - 支持多种输出格式，如多模态与NLP的Markdown、按阅读顺序排序的JSON、含有丰富信息的中间格式等
 - 支持多种可视化结果，包括layout可视化、span可视化等，便于高效确认输出效果与质检
 - 支持纯CPU环境运行，并支持 GPU(CUDA)/NPU(CANN)/MPS 加速
@@ -582,42 +629,80 @@ https://github.com/user-attachments/assets/4bea02c9-6d54-4cd6-97ed-dff14340982c
 >
 > 在非主线环境中，由于硬件、软件配置的多样性，以及第三方依赖项的兼容性问题，我们无法100%保证项目的完全可用性。因此，对于希望在非推荐环境中使用本项目的用户，我们建议先仔细阅读文档以及FAQ，大多数问题已经在FAQ中有对应的解决方案，除此之外我们鼓励社区反馈问题，以便我们能够逐步扩大支持范围。
 
+
 <table>
-    <tr>
-        <td>解析后端</td>
-        <td>pipeline</td>
-        <td>vlm-transformers</td>
-        <td>vlm-vllm</td>
-    </tr>
-    <tr>
-        <td>操作系统</td>
-        <td>Linux / Windows / macOS</td>
-        <td>Linux / Windows</td>
-        <td>Linux / Windows (via WSL2)</td>
-    </tr>
-    <tr>
-        <td>CPU推理支持</td>
-        <td>✅</td>
-        <td colspan="2">❌</td>
-    </tr>
-    <tr>
-        <td>GPU要求</td>
-        <td>Turing及以后架构，6G显存以上或Apple Silicon</td>
-        <td colspan="2">Turing及以后架构，8G显存以上</td>
-    </tr>
-    <tr>
-        <td>内存要求</td>
-        <td colspan="3">最低16G以上，推荐32G以上</td>
-    </tr>
-    <tr>
-        <td>磁盘空间要求</td>
-        <td colspan="3">20G以上，推荐使用SSD</td>
-    </tr>
-    <tr>
-        <td>python版本</td>
-        <td colspan="3">3.10-3.13</td>
-    </tr>
-</table>
+    <thead>
+        <tr>
+            <th rowspan="2">解析后端</th>
+            <th rowspan="2">pipeline <br> (精度<sup>1</sup> 82+)</th>
+            <th colspan="5">vlm (精度<sup>1</sup> 90+)</th>
+        </tr>
+        <tr>
+            <th>transformers</th>
+            <th>mlx-engine</th>
+            <th>vllm-engine / <br>vllm-async-engine</th>
+            <th>lmdeploy-engine</th>
+            <th>http-client</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>后端特性</th>
+            <td>速度快, 无幻觉</td>
+            <td>兼容性好, 速度较慢</td>
+            <td>比transformers快</td>
+            <td>速度快, 兼容vllm生态</td>
+            <td>速度快, 兼容lmdeploy生态</td>
+            <td>适用于OpenAI兼容服务器<sup>6</sup></td>
+        </tr>
+        <tr>
+            <th>操作系统</th>
+            <td colspan="2" style="text-align:center;">Linux<sup>2</sup> / Windows / macOS</td>
+            <td style="text-align:center;">macOS<sup>3</sup></td>
+            <td style="text-align:center;">Linux<sup>2</sup> / Windows<sup>4</sup> </td>
+            <td style="text-align:center;">Linux<sup>2</sup> / Windows<sup>5</sup> </td>
+            <td>不限</td>
+        </tr>
+        <tr>
+            <th>CPU推理支持</th>
+            <td colspan="2" style="text-align:center;">✅</td>
+            <td colspan="3" style="text-align:center;">❌</td>
+            <td >不需要</td>
+        </tr>
+        <tr>
+            <th>GPU要求</th><td colspan="2" style="text-align:center;">Volta及以后架构, 6G显存以上或Apple Silicon</td>
+            <td>Apple Silicon</td>
+            <td colspan="2" style="text-align:center;">Volta及以后架构, 8G显存以上</td>
+            <td>不需要</td>
+        </tr>
+        <tr>
+            <th>内存要求</th>
+            <td colspan="5" style="text-align:center;">最低16GB以上, 推荐32GB以上</td>
+            <td>8GB</td>
+        </tr>
+        <tr>
+            <th>磁盘空间要求</th>
+            <td colspan="5" style="text-align:center;">20GB以上, 推荐使用SSD</td>
+            <td>2GB</td>
+        </tr>
+        <tr>
+            <th>python版本</th>
+            <td colspan="6" style="text-align:center;">3.10-3.13<sup>7</sup></td>
+        </tr>
+    </tbody>
+</table> 
+
+<sup>1</sup> 精度指标为OmniDocBench (v1.5)的End-to-End Evaluation Overall分数，基于`MinerU`最新版本测试  
+<sup>2</sup> Linux仅支持2019年及以后发行版  
+<sup>3</sup> MLX需macOS 13.5及以上版本支持，推荐14.0以上版本使用  
+<sup>4</sup> Windows vLLM通过WSL2(适用于 Linux 的 Windows 子系统)实现支持  
+<sup>5</sup> Windows LMDeploy只能使用`turbomind`后端，速度比`pytorch`后端稍慢，如对速度有要求建议通过WSL2运行  
+<sup>6</sup> 兼容OpenAI API的服务器，如通过`vLLM`/`SGLang`/`LMDeploy`等推理框架部署的本地模型服务器或远程模型服务  
+<sup>7</sup> Windows + LMDeploy 由于关键依赖`ray`未能在windows平台支持Python 3.13，故仅支持至3.10~3.12版本
+
+> [!TIP]
+> 除以上主流环境与平台外，我们也收录了一些社区用户反馈的其他平台支持情况，详情请参考[其他加速卡适配](https://opendatalab.github.io/MinerU/zh/usage/)。  
+> 如果您有意将自己的环境适配经验分享给社区，欢迎通过[show-and-tell](https://github.com/opendatalab/MinerU/discussions/categories/show-and-tell)提交或提交PR至[其他加速卡适配](https://github.com/opendatalab/MinerU/tree/master/docs/zh/usage/acceleration_cards)文档。
 
 ### 安装 MinerU
 
@@ -636,8 +721,8 @@ uv pip install -e .[core] -i https://mirrors.aliyun.com/pypi/simple
 ```
 
 > [!TIP]
-> `mineru[core]`包含除`vLLM`加速外的所有核心功能，兼容Windows / Linux / macOS系统，适合绝大多数用户。
-> 如果您有使用`vLLM`加速VLM模型推理，或是在边缘设备安装轻量版client端等需求，可以参考文档[扩展模块安装指南](https://opendatalab.github.io/MinerU/zh/quick_start/extension_modules/)。
+> `mineru[core]`包含除`vLLM`/`LMDeploy`加速外的所有核心功能，兼容Windows / Linux / macOS系统，适合绝大多数用户。
+> 如果您需要使用`vLLM`/`LMDeploy`加速VLM模型推理，或是有在边缘设备安装轻量版client端等需求，可以参考文档[扩展模块安装指南](https://opendatalab.github.io/MinerU/zh/quick_start/extension_modules/)。
 
 ---
  
@@ -715,10 +800,22 @@ mineru -p <input_path> -o <output_path>
 - [pdfminer.six](https://github.com/pdfminer/pdfminer.six)
 - [pypdf](https://github.com/py-pdf/pypdf)
 - [magika](https://github.com/google/magika)
+- [vLLM](https://github.com/vllm-project/vllm)
+- [LMDeploy](https://github.com/InternLM/lmdeploy)
 
 # Citation
 
 ```bibtex
+@misc{niu2025mineru25decoupledvisionlanguagemodel,
+      title={MinerU2.5: A Decoupled Vision-Language Model for Efficient High-Resolution Document Parsing}, 
+      author={Junbo Niu and Zheng Liu and Zhuangcheng Gu and Bin Wang and Linke Ouyang and Zhiyuan Zhao and Tao Chu and Tianyao He and Fan Wu and Qintong Zhang and Zhenjiang Jin and Guang Liang and Rui Zhang and Wenzheng Zhang and Yuan Qu and Zhifei Ren and Yuefeng Sun and Yuanhong Zheng and Dongsheng Ma and Zirui Tang and Boyu Niu and Ziyang Miao and Hejun Dong and Siyi Qian and Junyuan Zhang and Jingzhou Chen and Fangdong Wang and Xiaomeng Zhao and Liqun Wei and Wei Li and Shasha Wang and Ruiliang Xu and Yuanyuan Cao and Lu Chen and Qianqian Wu and Huaiyu Gu and Lindong Lu and Keming Wang and Dechen Lin and Guanlin Shen and Xuanhe Zhou and Linfeng Zhang and Yuhang Zang and Xiaoyi Dong and Jiaqi Wang and Bo Zhang and Lei Bai and Pei Chu and Weijia Li and Jiang Wu and Lijun Wu and Zhenxiang Li and Guangyu Wang and Zhongying Tu and Chao Xu and Kai Chen and Yu Qiao and Bowen Zhou and Dahua Lin and Wentao Zhang and Conghui He},
+      year={2025},
+      eprint={2509.22186},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2509.22186}, 
+}
+
 @misc{wang2024mineruopensourcesolutionprecise,
       title={MinerU: An Open-Source Solution for Precise Document Content Extraction}, 
       author={Bin Wang and Chao Xu and Xiaomeng Zhao and Linke Ouyang and Fan Wu and Zhiyuan Zhao and Rui Xu and Kaiwen Liu and Yuan Qu and Fukai Shang and Bo Zhang and Liqun Wei and Zhihao Sui and Wei Li and Botian Shi and Yu Qiao and Dahua Lin and Conghui He},

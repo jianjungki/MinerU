@@ -26,7 +26,7 @@ class MinerUAPI(ls.LitAPI):
         device_mode = os.environ['MINERU_DEVICE_MODE']
         if os.getenv('MINERU_VIRTUAL_VRAM_SIZE', None) == None:
             if device_mode.startswith("cuda") or device_mode.startswith("npu"):
-                vram = round(get_vram(device_mode))
+                vram = get_vram(device_mode)
                 os.environ['MINERU_VIRTUAL_VRAM_SIZE'] = str(vram)
             else:
                 os.environ['MINERU_VIRTUAL_VRAM_SIZE'] = '1'
@@ -61,8 +61,8 @@ class MinerUAPI(ls.LitAPI):
     def predict(self, inputs):
         """Call MinerU's do_parse - same as CLI"""
         input_path = inputs['input_path']
-        output_dir = Path(self.output_dir) / Path(input_path).stem
-        
+        output_dir = Path(self.output_dir)
+
         try:
             os.makedirs(output_dir, exist_ok=True)
             
@@ -82,9 +82,9 @@ class MinerUAPI(ls.LitAPI):
                 start_page_id=inputs['start_page_id'],
                 end_page_id=inputs['end_page_id']
             )
-            
-            return str(output_dir)
-            
+
+            return str(output_dir/Path(input_path).stem)
+
         except Exception as e:
             logger.error(f"Processing failed: {e}")
             raise HTTPException(status_code=500, detail=str(e))

@@ -21,7 +21,7 @@ def download_and_modify_json(url, local_filename, modifications):
     if os.path.exists(local_filename):
         data = json.load(open(local_filename))
         config_version = data.get('config_version', '0.0.0')
-        if config_version < '1.3.0':
+        if config_version < '1.3.1':
             data = download_json(url)
     else:
         data = download_json(url)
@@ -70,6 +70,7 @@ def download_pipeline_models():
         ModelPath.unet_structure,
         ModelPath.paddle_table_cls,
         ModelPath.paddle_orientation_classification,
+        ModelPath.pp_formulanet_plus_m,
     ]
     download_finish_path = ""
     for model_path in model_paths:

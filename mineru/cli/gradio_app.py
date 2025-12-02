@@ -13,6 +13,7 @@ from gradio_pdf import PDF
 from loguru import logger
 
 from mineru.cli.common import prepare_env, read_fn, aio_do_parse, pdf_suffixes, image_suffixes
+from mineru.utils.check_sys_env import is_mac_os_version_supported
 from mineru.utils.cli_parser import arg_parse
 from mineru.utils.hash_utils import str_sha256
 
@@ -86,10 +87,14 @@ def replace_image_with_base64(markdown_text, image_dir_path):
     # 替换图片链接
     def replace(match):
         relative_path = match.group(1)
-        full_path = os.path.join(image_dir_path, relative_path)
-        base64_image = image_to_base64(full_path)
-        return f'![{relative_path}](data:image/jpeg;base64,{base64_image})'
-
+        # 只处理以.jpg结尾的图片
+        if relative_path.endswith('.jpg'):
+            full_path = os.path.join(image_dir_path, relative_path)
+            base64_image = image_to_base64(full_path)
+            return f'![{relative_path}](data:image/jpeg;base64,{base64_image})'
+        else:
+            # 其他格式的图片保持原样
+            return match.group(0)
     # 应用替换
     return re.sub(pattern, replace, markdown_text)
 
@@ -130,20 +135,107 @@ with open(header_path, 'r') as header_file:
 
 
 latin_lang = [
-        'af', 'az', 'bs', 'cs', 'cy', 'da', 'de', 'es', 'et', 'fr', 'ga', 'hr',  # noqa: E126
-        'hu', 'id', 'is', 'it', 'ku', 'la', 'lt', 'lv', 'mi', 'ms', 'mt', 'nl',
-        'no', 'oc', 'pi', 'pl', 'pt', 'ro', 'rs_latin', 'sk', 'sl', 'sq', 'sv',
-        'sw', 'tl', 'tr', 'uz', 'vi', 'french', 'german'
+        "af",
+        "az",
+        "bs",
+        "cs",
+        "cy",
+        "da",
+        "de",
+        "es",
+        "et",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "id",
+        "is",
+        "it",
+        "ku",
+        "la",
+        "lt",
+        "lv",
+        "mi",
+        "ms",
+        "mt",
+        "nl",
+        "no",
+        "oc",
+        "pi",
+        "pl",
+        "pt",
+        "ro",
+        "rs_latin",
+        "sk",
+        "sl",
+        "sq",
+        "sv",
+        "sw",
+        "tl",
+        "tr",
+        "uz",
+        "vi",
+        "french",
+        "german",
+        "fi",
+        "eu",
+        "gl",
+        "lb",
+        "rm",
+        "ca",
+        "qu",
 ]
-arabic_lang = ['ar', 'fa', 'ug', 'ur']
+arabic_lang = ["ar", "fa", "ug", "ur", "ps", "ku", "sd", "bal"]
 cyrillic_lang = [
-        'rs_cyrillic', 'bg', 'mn', 'abq', 'ady', 'kbd', 'ava',  # noqa: E126
-        'dar', 'inh', 'che', 'lbe', 'lez', 'tab'
+        "ru",
+        "rs_cyrillic",
+        "be",
+        "bg",
+        "uk",
+        "mn",
+        "abq",
+        "ady",
+        "kbd",
+        "ava",
+        "dar",
+        "inh",
+        "che",
+        "lbe",
+        "lez",
+        "tab",
+        "kk",
+        "ky",
+        "tg",
+        "mk",
+        "tt",
+        "cv",
+        "ba",
+        "mhr",
+        "mo",
+        "udm",
+        "kv",
+        "os",
+        "bua",
+        "xal",
+        "tyv",
+        "sah",
+        "kaa",
 ]
 east_slavic_lang = ["ru", "be", "uk"]
 devanagari_lang = [
-        'hi', 'mr', 'ne', 'bh', 'mai', 'ang', 'bho', 'mah', 'sck', 'new', 'gom',  # noqa: E126
-        'sa', 'bgc'
+        "hi",
+        "mr",
+        "ne",
+        "bh",
+        "mai",
+        "ang",
+        "bho",
+        "mah",
+        "sck",
+        "new",
+        "gom",
+        "sa",
+        "bgc",
 ]
 other_lang = ['ch', 'ch_lite', 'ch_server', 'en', 'korean', 'japan', 'chinese_cht', 'ta', 'te', 'ka', "el", "th"]
 add_lang = ['latin', 'arabic', 'east_slavic', 'cyrillic', 'devanagari']
@@ -182,7 +274,7 @@ def to_pdf(file_path):
 
 # 更新界面函数
 def update_interface(backend_choice):
-    if backend_choice in ["vlm-transformers", "vlm-vllm-async-engine"]:
+    if backend_choice in ["vlm-transformers", "vlm-vllm-async-engine", "vlm-lmdeploy-engine", "vlm-mlx-engine"]:
         return gr.update(visible=False), gr.update(visible=False)
     elif backend_choice in ["vlm-http-client"]:
         return gr.update(visible=True), gr.update(visible=False)
@@ -207,6 +299,13 @@ def update_interface(backend_choice):
     'vllm_engine_enable',
     type=bool,
     help="Enable vLLM engine backend for faster processing.",
+    default=False,
+)
+@click.option(
+    '--enable-lmdeploy-engine',
+    'lmdeploy_engine_enable',
+    type=bool,
+    help="Enable LMDeploy engine backend for faster processing.",
     default=False,
 )
 @click.option(
@@ -246,7 +345,7 @@ def update_interface(backend_choice):
     default='all',
 )
 def main(ctx,
-        example_enable, vllm_engine_enable, api_enable, max_convert_pages,
+        example_enable, vllm_engine_enable, lmdeploy_engine_enable, api_enable, max_convert_pages,
         server_name, server_port, latex_delimiters_type, **kwargs
 ):
 
@@ -275,6 +374,20 @@ def main(ctx,
             print("vLLM engine init successfully.")
         except Exception as e:
             logger.exception(e)
+    elif lmdeploy_engine_enable:
+        try:
+            print("Start init LMDeploy engine...")
+            from mineru.backend.vlm.vlm_analyze import ModelSingleton
+            model_singleton = ModelSingleton()
+            predictor = model_singleton.get_model(
+                "lmdeploy-engine",
+                None,
+                None,
+                **kwargs
+            )
+            print("LMDeploy engine init successfully.")
+        except Exception as e:
+            logger.exception(e)
     suffixes = [f".{suffix}" for suffix in pdf_suffixes + image_suffixes]
     with gr.Blocks() as demo:
         gr.HTML(header)
@@ -288,8 +401,13 @@ def main(ctx,
                     if vllm_engine_enable:
                         drop_list = ["pipeline", "vlm-vllm-async-engine"]
                         preferred_option = "vlm-vllm-async-engine"
+                    elif lmdeploy_engine_enable:
+                        drop_list = ["pipeline", "vlm-lmdeploy-engine"]
+                        preferred_option = "vlm-lmdeploy-engine"
                     else:
                         drop_list = ["pipeline", "vlm-transformers", "vlm-http-client"]
+                        if is_mac_os_version_supported():
+                            drop_list.append("vlm-mlx-engine")
                         preferred_option = "pipeline"
                     backend = gr.Dropdown(drop_list, label="Backend", value=preferred_option)
                 with gr.Row(visible=False) as client_options:

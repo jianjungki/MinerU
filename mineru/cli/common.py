@@ -5,8 +5,8 @@ import os
 import copy
 from pathlib import Path
 
-import pypdfium2 as pdfium
 from loguru import logger
+import pypdfium2 as pdfium
 
 from mineru.data.data_reader_writer import FileBasedDataWriter
 from mineru.utils.draw_bbox import draw_layout_bbox, draw_span_bbox, draw_line_sort_bbox
@@ -16,17 +16,24 @@ from mineru.utils.pdf_image_tools import images_bytes_to_pdf_bytes
 from mineru.backend.vlm.vlm_middle_json_mkcontent import union_make as vlm_union_make
 from mineru.backend.vlm.vlm_analyze import doc_analyze as vlm_doc_analyze
 from mineru.backend.vlm.vlm_analyze import aio_doc_analyze as aio_vlm_doc_analyze
+from mineru.utils.pdf_page_id import get_end_page_id
+
+if os.getenv("MINERU_LMDEPLOY_DEVICE", "") == "maca":
+    import torch
+    torch.backends.cudnn.enabled = False
+
 
 pdf_suffixes = ["pdf"]
-image_suffixes = ["png", "jpeg", "jp2", "webp", "gif", "bmp", "jpg"]
+image_suffixes = ["png", "jpeg", "jp2", "webp", "gif", "bmp", "jpg", "tiff"]
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def read_fn(path):
     if not isinstance(path, Path):
         path = Path(path)
     with open(str(path), "rb") as input_file:
         file_bytes = input_file.read()
-        file_suffix = guess_suffix_by_bytes(file_bytes)
+        file_suffix = guess_suffix_by_bytes(file_bytes, path)
         if file_suffix in image_suffixes:
             return images_bytes_to_pdf_bytes(file_bytes)
         elif file_suffix in pdf_suffixes:
@@ -44,35 +51,33 @@ def prepare_env(output_dir, pdf_file_name, parse_method):
 
 
 def convert_pdf_bytes_to_bytes_by_pypdfium2(pdf_bytes, start_page_id=0, end_page_id=None):
-
-    # 从字节数据加载PDF
     pdf = pdfium.PdfDocument(pdf_bytes)
-
-    # 确定结束页
-    end_page_id = end_page_id if end_page_id is not None and end_page_id >= 0 else len(pdf) - 1
-    if end_page_id > len(pdf) - 1:
-        logger.warning("end_page_id is out of range, use pdf_docs length")
-        end_page_id = len(pdf) - 1
-
-    # 创建一个新的PDF文档
     output_pdf = pdfium.PdfDocument.new()
+    try:
+        end_page_id = get_end_page_id(end_page_id, len(pdf))
 
-    # 选择要导入的页面索引
-    page_indices = list(range(start_page_id, end_page_id + 1))
+        # 逐页导入,失败则跳过
+        output_index = 0
+        for page_index in range(start_page_id, end_page_id + 1):
+            try:
+                output_pdf.import_pages(pdf, pages=[page_index])
+                output_index += 1
+            except Exception as page_error:
+                output_pdf.del_page(output_index)
+                logger.warning(f"Failed to import page {page_index}: {page_error}, skipping this page.")
+                continue
 
-    # 从原PDF导入页面到新PDF
-    output_pdf.import_pages(pdf, page_indices)
+        # 将新PDF保存到内存缓冲区
+        output_buffer = io.BytesIO()
+        output_pdf.save(output_buffer)
 
-    # 将新PDF保存到内存缓冲区
-    output_buffer = io.BytesIO()
-    output_pdf.save(output_buffer)
-
-    # 获取字节数据
-    output_bytes = output_buffer.getvalue()
-
-    pdf.close()  # 关闭原PDF文档以释放资源
-    output_pdf.close()  # 关闭新PDF文档以释放资源
-
+        # 获取字节数据
+        output_bytes = output_buffer.getvalue()
+    except Exception as e:
+        logger.warning(f"Error in converting PDF bytes: {e}, Using original PDF bytes.")
+        output_bytes = pdf_bytes
+    pdf.close()
+    output_pdf.close()
     return output_bytes
 
 

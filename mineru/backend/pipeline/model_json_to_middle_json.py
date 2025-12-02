@@ -5,6 +5,7 @@ import time
 from loguru import logger
 from tqdm import tqdm
 
+from mineru.backend.utils import cross_page_table_merge
 from mineru.utils.config_reader import get_device, get_llm_aided_config, get_formula_enable
 from mineru.backend.pipeline.model_init import AtomModelSingleton
 from mineru.backend.pipeline.para_split import para_split
@@ -20,7 +21,6 @@ from mineru.utils.ocr_utils import OcrConfidence
 from mineru.utils.span_block_fix import fill_spans_in_blocks, fix_discarded_block, fix_block_spans
 from mineru.utils.span_pre_proc import remove_outside_spans, remove_overlaps_low_confidence_spans, \
     remove_overlaps_min_spans, txt_spans_extract
-from mineru.utils.table_merge import merge_table
 from mineru.version import __version__
 from mineru.utils.hash_utils import bytes_md5
 
@@ -148,7 +148,7 @@ def page_model_info_to_page_info(page_model_info, image_dict, page, image_writer
     fix_discarded_blocks = fix_discarded_block(discarded_block_with_spans)
 
     """如果当前页面没有有效的bbox则跳过"""
-    if len(all_bboxes) == 0:
+    if len(all_bboxes) == 0 and len(fix_discarded_blocks) == 0:
         return None
 
     """对image/table/interline_equation截图"""
@@ -231,7 +231,7 @@ def result_to_middle_json(model_list, images_list, pdf_doc, image_writer, lang=N
     para_split(middle_json["pdf_info"])
 
     """表格跨页合并"""
-    merge_table(middle_json["pdf_info"])
+    cross_page_table_merge(middle_json["pdf_info"])
 
     """llm优化"""
     llm_aided_config = get_llm_aided_config()

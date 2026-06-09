@@ -1,3 +1,4 @@
+# Copyright (c) Opendatalab. All rights reserved.
 import os
 
 
@@ -9,6 +10,11 @@ def get_op_num_threads(env_name: str) -> int:
 def get_load_images_timeout() -> int:
     env_value = os.getenv('MINERU_PDF_RENDER_TIMEOUT', None)
     return get_value_from_string(env_value, 300)
+
+
+def get_load_images_threads() -> int:
+    env_value = os.getenv('MINERU_PDF_RENDER_THREADS', None)
+    return get_value_from_string(env_value, 3)
 
 
 def get_value_from_string(env_value: str, default_value: int) -> int:

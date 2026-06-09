@@ -86,7 +86,24 @@ def get_device():
                 if torch_npu.npu.is_available():
                     return "npu"
             except Exception as e:
-                pass
+                try:
+                    if torch.gcu.is_available():
+                        return "gcu"
+                except Exception as e:
+                    try:
+                        if torch.musa.is_available():
+                            return "musa"
+                    except Exception as e:
+                        try:
+                            if torch.mlu.is_available():
+                                return "mlu"
+                        except Exception as e:
+                            try:
+                                if torch.sdaa.is_available():
+                                    return "sdaa"
+                            except Exception as e:
+                                pass
+                                                           
         return "cpu"
 
 
@@ -100,6 +117,49 @@ def get_table_enable(table_enable):
     table_enable_env = os.getenv('MINERU_TABLE_ENABLE')
     table_enable = table_enable if table_enable_env is None else table_enable_env.lower() == 'true'
     return table_enable
+
+
+def get_ocr_det_mask_inline_formula_enable(enable):
+    enable_env = os.getenv('MINERU_OCR_DET_MASK_INLINE_FORMULA_ENABLE')
+    enable = enable if enable_env is None else enable_env.lower() == 'true'
+    return enable
+
+
+def get_processing_window_size(default: int = 64) -> int:
+    value = os.getenv('MINERU_PROCESSING_WINDOW_SIZE')
+    if value is None:
+        return default
+    try:
+        window_size = int(value)
+    except ValueError:
+        logger.warning(
+            f"Invalid MINERU_PROCESSING_WINDOW_SIZE value: {value}, use default {default}"
+        )
+        return default
+    return max(1, window_size)
+
+
+def get_max_concurrent_requests(default: int = 3) -> int:
+    if default <= 0:
+        raise ValueError(
+            f"default max_concurrent_requests must be a positive integer, got {default}"
+        )
+    value = os.getenv('MINERU_API_MAX_CONCURRENT_REQUESTS')
+    if value is None:
+        return default
+    try:
+        max_concurrent_requests = int(value)
+    except ValueError as exc:
+        raise ValueError(
+            "Invalid MINERU_API_MAX_CONCURRENT_REQUESTS value: "
+            f"{value}. Expected a positive integer."
+        ) from exc
+    if max_concurrent_requests <= 0:
+        raise ValueError(
+            "Invalid MINERU_API_MAX_CONCURRENT_REQUESTS value: "
+            f"{value}. Expected a positive integer."
+        )
+    return max_concurrent_requests
 
 
 def get_latex_delimiter_config():

@@ -4,8 +4,11 @@
 
 `mineru` 命令执行后，除了输出主要的 markdown 文件外，还会生成多个辅助文件用于调试、质检和进一步处理。这些文件包括：
 
+具体会生成哪些文件，取决于后端类型和输入文档类型。
+
 - **可视化调试文件**：帮助用户直观了解文档解析过程和结果
 - **结构化数据文件**：包含详细的解析数据，可用于二次开发
+- 多模态 markdown 输出中，`image` / `chart` 默认以截图为主；若块内存在 `content`，会在图片后追加一个默认折叠的 HTML `<details>` 内容块，其中折叠标题优先使用块的 `sub_type`，否则回退为 `image content` 或 `chart content`
 
 下面将详细介绍每个文件的作用和格式。
 
@@ -29,12 +32,12 @@
 
 ![layout 页面示例](../images/layout_example.png)
 
-### 文本片段文件 (spans.pdf)
+### 文本片段文件 (span.pdf)
 
 > [!NOTE]
 > 仅适用于 pipeline 后端
 
-**文件命名格式**：`{原文件名}_spans.pdf`
+**文件命名格式**：`{原文件名}_span.pdf`
 
 **功能说明**：
 
@@ -60,109 +63,45 @@
 
 **文件命名格式**：`{原文件名}_model.json`
 
-##### 数据结构定义
-
-```python
-from pydantic import BaseModel, Field
-from enum import IntEnum
-
-class CategoryType(IntEnum):
-    """内容类别枚举"""
-    title = 0               # 标题
-    plain_text = 1          # 文本
-    abandon = 2             # 包括页眉页脚页码和页面注释
-    figure = 3              # 图片
-    figure_caption = 4      # 图片描述
-    table = 5               # 表格
-    table_caption = 6       # 表格描述
-    table_footnote = 7      # 表格注释
-    isolate_formula = 8     # 行间公式
-    formula_caption = 9     # 行间公式的标号
-    embedding = 13          # 行内公式
-    isolated = 14           # 行间公式
-    text = 15               # OCR 识别结果
-
-class PageInfo(BaseModel):
-    """页面信息"""
-    page_no: int = Field(description="页码序号，第一页的序号是 0", ge=0)
-    height: int = Field(description="页面高度", gt=0)
-    width: int = Field(description="页面宽度", ge=0)
-
-class ObjectInferenceResult(BaseModel):
-    """对象识别结果"""
-    category_id: CategoryType = Field(description="类别", ge=0)
-    poly: list[float] = Field(description="四边形坐标，格式为 [x0,y0,x1,y1,x2,y2,x3,y3]")
-    score: float = Field(description="推理结果的置信度")
-    latex: str | None = Field(description="LaTeX 解析结果", default=None)
-    html: str | None = Field(description="HTML 解析结果", default=None)
-
-class PageInferenceResults(BaseModel):
-    """页面推理结果"""
-    layout_dets: list[ObjectInferenceResult] = Field(description="页面识别结果")
-    page_info: PageInfo = Field(description="页面元信息")
-
-# 完整的推理结果
-inference_result: list[PageInferenceResults] = []
-```
-
-##### 坐标系统说明
-
-`poly` 坐标格式：`[x0, y0, x1, y1, x2, y2, x3, y3]`
-
-- 分别表示左上、右上、右下、左下四点的坐标
-- 坐标原点在页面左上角
-
-![poly 坐标示意图](../images/poly.png)
-
 ##### 示例数据
 
 ```json
 [
     {
-        "layout_dets": [
-            {
-                "category_id": 2,
-                "poly": [
-                    99.1906967163086,
-                    100.3119125366211,
-                    730.3707885742188,
-                    100.3119125366211,
-                    730.3707885742188,
-                    245.81326293945312,
-                    99.1906967163086,
-                    245.81326293945312
-                ],
-                "score": 0.9999997615814209
-            }
+        "cls_id": 12,
+        "label": "header",
+        "score": 0.93,
+        "bbox": [
+            1217,
+            104,
+            1516,
+            134
         ],
-        "page_info": {
-            "page_no": 0,
-            "height": 2339,
-            "width": 1654
-        }
+        "index": 2
     },
     {
-        "layout_dets": [
-            {
-                "category_id": 5,
-                "poly": [
-                    99.13092803955078,
-                    2210.680419921875,
-                    497.3183898925781,
-                    2210.680419921875,
-                    497.3183898925781,
-                    2264.78076171875,
-                    99.13092803955078,
-                    2264.78076171875
-                ],
-                "score": 0.9999997019767761
-            }
+        "cls_id": 6,
+        "label": "doc_title",
+        "score": 0.9751,
+        "bbox": [
+            275,
+            181,
+            1512,
+            292
         ],
-        "page_info": {
-            "page_no": 1,
-            "height": 2339,
-            "width": 1654
-        }
+        "index": 3
+    },
+    {
+        "cls_id": 22,
+        "label": "text",
+        "score": 0.9217,
+        "bbox": [
+            275,
+            330,
+            524,
+            370
+        ],
+        "index": 4
     }
 ]
 ```
@@ -176,7 +115,7 @@ inference_result: list[PageInferenceResults] = []
 | 字段名 | 类型 | 说明 |
 |--------|------|------|
 | `pdf_info` | `list[dict]` | 每一页的解析结果数组 |
-| `_backend` | `string` | 解析模式：`pipeline` 或 `vlm` |
+| `_backend` | `string` | 解析模式：`pipeline`、`vlm` 或 `office` |
 | `_version_name` | `string` | MinerU 版本号 |
 
 ##### 页面信息结构 (pdf_info)
@@ -195,7 +134,7 @@ inference_result: list[PageInferenceResults] = []
 ##### 块结构层次
 
 ```
-一级块 (table | image)
+一级块 (table | image | chart)
 └── 二级块
     └── 行 (line)
         └── 片段 (span)
@@ -205,7 +144,7 @@ inference_result: list[PageInferenceResults] = []
 
 | 字段名 | 说明 |
 |--------|------|
-| `type` | 块类型：`table` 或 `image` |
+| `type` | 块类型：`table`、`image` 或 `chart` |
 | `bbox` | 块的矩形框坐标 `[x0, y0, x1, y1]` |
 | `blocks` | 包含的二级块列表 |
 
@@ -227,6 +166,9 @@ inference_result: list[PageInferenceResults] = []
 | `table_body` | 表格本体 |
 | `table_caption` | 表格描述文本 |
 | `table_footnote` | 表格脚注 |
+| `chart_body` | 图表本体 |
+| `chart_caption` | 图表描述文本 |
+| `chart_footnote` | 图表脚注 |
 | `text` | 文本块 |
 | `title` | 标题块 |
 | `index` | 目录块 |
@@ -241,8 +183,8 @@ inference_result: list[PageInferenceResults] = []
 
 **片段 (span) 字段**：
 - `bbox`：片段的矩形框坐标
-- `type`：片段类型（`image`、`table`、`text`、`inline_equation`、`interline_equation`）
-- `content` | `img_path`：文本内容或图片路径
+- `type`：片段类型（`image`、`table`、`chart`、`text`、`inline_equation`、`interline_equation`）
+- `content` | `image_path`：文本内容或图片路径
 
 ##### 示例数据
 
@@ -361,8 +303,12 @@ inference_result: list[PageInferenceResults] = []
 |------|------|
 | `image` | 图片 |
 | `table` | 表格 |
+| `chart` | 图表 |
 | `text` | 文本/标题 |
 | `equation` | 行间公式 |
+| `code` | 代码块 / 算法块 |
+| `list` | 列表 / 参考文献列表 |
+| `header` / `footer` / `page_number` / `aside_text` / `page_footnote` | 页面辅助块 |
 
 ##### 文本层级标识
 
@@ -377,6 +323,10 @@ inference_result: list[PageInferenceResults] = []
 
 - 所有内容块都包含 `page_idx` 字段，表示所在页码（从 0 开始）。
 - 所有内容块都包含 `bbox` 字段，表示内容块的边界框坐标 `[x0, y0, x1, y1]` 映射在0-1000范围内的结果。
+- `code` 类型会通过 `sub_type` 区分 `code` 和 `algorithm`，并可包含 `code_body`、`code_caption`、`code_footnote` 等字段。
+- `list` 类型可通过 `sub_type` 区分普通列表和参考文献列表。
+- `image` / `chart` 类型可包含可选 `sub_type` 字段，用于透传视觉子类型。
+- 印章内容通过 `sub_type: "seal"` 的 `image` 类型表示。
 
 ##### 示例数据
 
@@ -440,6 +390,91 @@ inference_result: list[PageInferenceResults] = []
         ],  
         "page_idx": 5
     }
+]
+```
+
+### 通用内容列表 V2 (content_list_v2.json)(开发中，格式可能调整)
+
+**文件命名格式**：`{原文件名}_content_list_v2.json`
+
+##### 功能说明
+
+`content_list_v2.json` 是 3.0 起新增的结构化输出文件，所有后端都会在保留 `content_list.json` 的同时额外输出该文件：
+
+- 顶层是按页分组的列表，便于按页消费结果
+- 每个内容块使用统一的 `type + content` 结构，适合程序化处理
+- 不同后端和输入类型支持的 `type` 会有所不同
+
+##### 通用字段
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `type` | `string` | 内容类型 |
+| `content` | `dict` | 与 `type` 对应的结构化内容 |
+| `bbox` | `list[int]` | 可选，0-1000 范围的边界框 |
+| `anchor` | `string` | 可选，部分 `DOCX` 标题或索引项会携带锚点 |
+
+其中 `image` / `chart` 类型还可能包含可选顶层字段 `sub_type`，用于表示视觉子类型。
+
+##### 常见类型
+
+| 类型 | 说明 |
+|------|------|
+| `title` | 标题块，包含 `title_content` 与 `level` |
+| `paragraph` | 段落块，包含 `paragraph_content` |
+| `equation_interline` | 行间公式，包含 `math_content`、`math_type` |
+| `image` / `table` / `chart` | 视觉类块，包含图片路径、说明文字等结构化字段；印章使用 `sub_type: "seal"` 的 `image` 表示 |
+| `code` | 代码块，包含 `code_content`、`code_caption`、`code_footnote`、`code_language` |
+| `algorithm` | 算法块，包含 `algorithm_content`、`algorithm_caption`、`algorithm_footnote` |
+| `list` / `index` | 列表与索引，包含 `list_items` |
+| `page_header` / `page_footer` / `page_number` / `page_aside_text` / `page_footnote` | 页面辅助块 |
+
+`title_content`、`paragraph_content`、说明文字等行内内容通常由 span 列表组成。
+`hyperlink` span 包含 `content`、`url`，当同一个链接内存在多段不同样式文本时，
+还会包含 `children`；此时 `content` 是 children 文本的拼接，精确样式以
+`children` 中的 `text` span 为准。
+
+##### 示例数据
+
+```json
+[
+    [
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "1 Introduction"
+                    }
+                ],
+                "level": 1
+            },
+            "bbox": [
+                83,
+                121,
+                917,
+                156
+            ]
+        },
+        {
+            "type": "page_footnote",
+            "content": {
+                "page_footnote_content": [
+                    {
+                        "type": "text",
+                        "content": "* Corresponding author"
+                    }
+                ]
+            },
+            "bbox": [
+                71,
+                815,
+                915,
+                841
+            ]
+        }
+    ]
 ]
 ```
 
@@ -735,12 +770,16 @@ vlm 后端的 content_list.json 文件结构与 pipeline 后端类似，伴随�
     * `text`
     * `ref_text` 
 
+- `image` / `chart` 类型可能带有可选 `sub_type` 字段，用于透传视觉子类型
+- `chart` 类型除 `img_path` 外，还可包含 `content`、`chart_caption`、`chart_footnote`，其中 `content` 保持原始 Markdown 表格文本
+
 - 增加所有所有`discarded_blocks`的输出内容
     * `header`
     * `footer`
     * `page_number`
     * `aside_text`
     * `page_footnote`
+- 3.0 起，vlm 后端也会同时输出 `*_content_list_v2.json`，其通用结构见上文“通用内容列表 V2”。
 
 ##### 示例数据
 - code 类型 content
@@ -817,11 +856,12 @@ vlm 后端的 content_list.json 文件结构与 pipeline 后端类似，伴随�
   
 - **调试和验证**(使用可视化文件):
     * layout.pdf
-    * spans.pdf 
+    * span.pdf 
   
 - **内容提取**(使用简化文件):
     * *.md
     * content_list.json
+    * content_list_v2.json
   
 - **二次开发**(使用结构化文件):
     * middle.json

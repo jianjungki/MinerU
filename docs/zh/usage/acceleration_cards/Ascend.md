@@ -23,9 +23,9 @@ docker: 20.10.12
 > - Atlas 800I A3 inference series (Atlas 800I A3)
 > - [Experimental] Atlas 300I inference series (Atlas 300I Duo)
 >
-> Dockerfile文件第三行为ascend-vllm基础镜像信息,默认tag为A2适配的版本,例如 `v0.11.0rc2`
+> Dockerfile文件第三行为ascend-vllm基础镜像信息,默认tag为A2适配的版本,例如 `v0.11.0`
 >
-> - 如需使用A3适配的版本,请将第三行的tag修改为 `v0.11.0rc2-a3`,然后再执行build操作。
+> - 如需使用A3适配的版本,请将第三行的tag修改为 `v0.11.0-a3`,然后再执行build操作。
 > - 如需使用Atlas 300I Duo适配的版本,请将第三行的tag修改为 `v0.10.0rc1-310p`,然后再执行build操作。
 
 
@@ -47,7 +47,7 @@ docker build --network=host -t mineru:npu-vllm-latest -f npu.Dockerfile .
 ```bash
 wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/docker/china/npu.Dockerfile
 # 将基础镜像从 vllm 切换为 lmdeploy
-sed -i '3s/^/# /' npu.Dockerfile && sed -i '5s/^# //' npu.Dockerfile
+sed -i '3s/^/# /' npu.Dockerfile && sed -i '5,6s/^# //' npu.Dockerfile
 docker build --network=host -t mineru:npu-lmdeploy-latest -f npu.Dockerfile .
 ```
 
@@ -72,21 +72,26 @@ docker run -u root --name mineru_docker --privileged=true \
     -v /usr/local/dcmi:/usr/local/dcmi \
     -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \
     -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
+    -e VLLM_WORKER_MULTIPROC_METHOD=spawn \
     -e MINERU_MODEL_SOURCE=local \
-    -e MINERU_VIRTUAL_VRAM_SIZE=16 \
     -e MINERU_LMDEPLOY_DEVICE=ascend \
     -it mineru:npu-vllm-latest \
     /bin/bash
 ```
 
 >[!TIP]
-> 请根据实际情况选择使用`vllm`或`lmdeploy`版本的镜像，如需使用lmdeploy，替换上述命令中的`mineru:npu-vllm-latest`为`mineru:npu-lmdeploy-latest`即可。
+> - 请根据实际情况选择使用`vllm`或`lmdeploy`版本的镜像，如需使用lmdeploy，替换上述命令中的`mineru:npu-vllm-latest`为`mineru:npu-lmdeploy-latest`即可。
+> - 在 Ascend NPU 环境下，请务必保留环境变量`MINERU_LMDEPLOY_DEVICE=ascend`，即使您是使用`vllm`后端，也需要保留该环境变量。
 
 执行该命令后，您将进入到Docker容器的交互式终端，您可以直接在容器内运行MinerU相关命令来使用MinerU的功能。
 您也可以直接通过替换`/bin/bash`为服务启动命令来启动MinerU服务，详细说明请参考[通过命令启动服务](https://opendatalab.github.io/MinerU/zh/usage/quick_usage/#apiwebuihttp-clientserver)。
 
 >[!NOTE]
-> 由于310p加速卡不支持bf16精度，因此在使用该加速卡时，执行任意与`vllm`相关命令需追加`--enforce-eager --dtype float16`参数。
+> 由于310p加速卡不支持图模式与bf16精度，因此在使用该加速卡时，执行任意与`vllm`相关命令需追加`--enforce-eager --dtype float16`参数。
+> 例如:
+> ```bash
+> mineru-openai-server --port 30000 --enforce-eager --dtype float16
+> ```   
 
 ## 4. 注意事项
 
@@ -105,65 +110,50 @@ docker run -u root --name mineru_docker --privileged=true \
   </thead>
   <tbody>
     <tr>
-      <td rowspan="4">命令行工具(mineru)</td>
+      <td rowspan="3">命令行工具(mineru)</td>
       <td>pipeline</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-transformers</td>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-&lt;engine_name&gt;-engine</td>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-http-client</td>
-      <td>🟢</td>
-      <td>🟢</td>
-    </tr>
-    <tr>
-      <td rowspan="4">fastapi服务(mineru-api)</td>
+      <td rowspan="3">fastapi服务(mineru-api)</td>
       <td>pipeline</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-transformers</td>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-&lt;engine_name&gt;-engine</td>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-http-client</td>
-      <td>🟢</td>
-      <td>🟢</td>
-    </tr>
-    <tr>
-      <td rowspan="4">gradio界面(mineru-gradio)</td>
+      <td rowspan="3">gradio界面(mineru-gradio)</td>
       <td>pipeline</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-transformers</td>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-&lt;engine_name&gt;-engine</td>
-      <td>🟢</td>
-      <td>🟢</td>
-    </tr>
-    <tr>
-      <td>vlm-http-client</td>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
@@ -172,23 +162,14 @@ docker run -u root --name mineru_docker --privileged=true \
       <td>🟢</td>
       <td>🟢</td>
     </tr>
-    <tr>
-      <td colspan="2">数据并行 (--data-parallel-size/--dp)</td>
-      <td>🟢</td>
-      <td>🔴</td>
-    </tr>
   </tbody>
 </table>
 
 注：  
 🟢: 支持，运行较稳定，精度与Nvidia GPU基本一致  
 🟡: 支持但较不稳定，在某些场景下可能出现异常，或精度存在一定差异  
-🔴: 不支持，无法运行，或精度存在较大差异  
-
->[!NOTE]
->在使用vllm镜像启动mineru-api服务时，如先使用了pipeline后端解析，再切换到vlm-vllm-async-engine后端，会出现vllm引擎初始化失败的问题。  
->如需在一个mineru-api服务中同时使用pipeline和vlm-vllm-async-engine两种后端，请先使用vlm-vllm-async-engine后端解析一次，之后即可自由切换。  
->如在服务中切换推理后端类型时遇到报错或异常，请重新启动服务即可。
+🔴: 不支持，无法运行，或精度存在较大差异
 
 >[!TIP]
->NPU加速卡指定可用加速卡的方式与NVIDIA GPU类似，请参考[ASCEND_RT_VISIBLE_DEVICES](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha001/maintenref/envvar/envref_07_0028.html)
+> - NPU加速卡指定可用加速卡的方式与NVIDIA GPU类似，请参考[ASCEND_RT_VISIBLE_DEVICES](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha001/maintenref/envvar/envref_07_0028.html)
+> - 在Ascend平台可以通过`npu-smi info`命令查看加速卡的使用情况，并根据需要指定空闲的加速卡ID以避免资源冲突。

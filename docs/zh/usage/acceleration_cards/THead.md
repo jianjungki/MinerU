@@ -25,7 +25,7 @@ docker build --network=host -t mineru:ppu-vllm-latest -f ppu.Dockerfile .
 ```bash
 wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/docker/china/ppu.Dockerfile
 # 将基础镜像从 vllm 切换为 lmdeploy
-sed -i '3s/^/# /' ppu.Dockerfile && sed -i '5s/^# //' ppu.Dockerfile
+sed -i '3s/^/# /' ppu.Dockerfile && sed -i '5,6s/^# //' ppu.Dockerfile
 docker build --network=host -t mineru:ppu-lmdeploy-latest -f ppu.Dockerfile .
 ```
 
@@ -73,65 +73,50 @@ docker run --privileged=true \
   </thead>
   <tbody>
     <tr>
-      <td rowspan="4">命令行工具(mineru)</td>
+      <td rowspan="3">命令行工具(mineru)</td>
       <td>pipeline</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-transformers</td>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-&lt;engine_name&gt;-engine</td>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-http-client</td>
-      <td>🟢</td>
-      <td>🟢</td>
-    </tr>
-    <tr>
-      <td rowspan="4">fastapi服务(mineru-api)</td>
+      <td rowspan="3">fastapi服务(mineru-api)</td>
       <td>pipeline</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-transformers</td>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-&lt;engine_name&gt;-engine</td>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-http-client</td>
-      <td>🟢</td>
-      <td>🟢</td>
-    </tr>
-    <tr>
-      <td rowspan="4">gradio界面(mineru-gradio)</td>
+      <td rowspan="3">gradio界面(mineru-gradio)</td>
       <td>pipeline</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-transformers</td>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
     <tr>
-      <td>vlm-&lt;engine_name&gt;-engine</td>
-      <td>🟢</td>
-      <td>🟢</td>
-    </tr>
-    <tr>
-      <td>vlm-http-client</td>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
       <td>🟢</td>
       <td>🟢</td>
     </tr>
@@ -139,11 +124,6 @@ docker run --privileged=true \
       <td colspan="2">openai-server服务（mineru-openai-server）</td>
       <td>🟢</td>
       <td>🟢</td>
-    </tr>
-    <tr>
-      <td colspan="2">数据并行 (--data-parallel-size/--dp)</td>
-      <td>🟡</td>
-      <td>🔴</td>
     </tr>
   </tbody>
 </table>
@@ -154,4 +134,5 @@ docker run --privileged=true \
 🔴: 不支持，无法运行，或精度存在较大差异  
 
 >[!TIP]
->PPU加速卡指定可用加速卡的方式与NVIDIA GPU类似，请参考[使用指定GPU设备](https://opendatalab.github.io/MinerU/zh/usage/advanced_cli_parameters/#cuda_visible_devices)章节说明。
+> - PPU加速卡指定可用加速卡的方式与NVIDIA GPU类似，请参考[使用指定GPU设备](https://opendatalab.github.io/MinerU/zh/usage/advanced_cli_parameters/#cuda_visible_devices)章节说明。
+> - 在T-Head平台可以通过`ppu-smi`命令查看加速卡的使用情况，并根据需要指定空闲的加速卡ID以避免资源冲突。

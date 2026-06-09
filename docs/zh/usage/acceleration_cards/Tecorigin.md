@@ -1,73 +1,116 @@
-# TECO适配
+## 1. 测试平台
+以下为本指南测试使用的平台信息，供参考：
+```
+os: Ubuntu 22.04.5 LTS  
+cpu: AMD EPYC (amd64)
+gpu: T100
+driver: 3.0.0
+docker: 28.0.4
+```
 
-## 快速开始
-使用本工具执行推理的主要流程如下：
-1. 基础环境安装：介绍推理前需要完成的基础环境检查和安装。
-3. 构建Docker环境：介绍如何使用Dockerfile创建模型推理时所需的Docker环境。
-4. 启动推理：介绍如何启动推理。
+## 2. 环境准备
 
-### 1 基础环境安装
-请参考[Teco用户手册的安装准备章节](http://docs.tecorigin.com/release/torch_2.4/v2.2.0/#fc980a30f1125aa88bad4246ff0cedcc)，完成训练前的基础环境检查和安装。
+### 2.1 下载并加载镜像 （vllm）
 
-### 2 构建docker
-#### 2.1 执行以下命令，下载Docker镜像至本地（Docker镜像包：pytorch-3.0.0-torch_sdaa3.0.0.tar）
+```bash
+wget http://wb.tecorigin.com:8082/repository/teco-customer-repo/Course/MinerU/mineru-vllm.tar
 
-    wget 镜像下载链接(链接获取请联系太初内部人员)
+docker load -i mineru-vllm.tar
+```
 
-#### 2.2 校验Docker镜像包，执行以下命令，生成MD5码是否与官方MD5码b2a7f60508c0d199a99b8b6b35da3954一致：
+## 3. 启动 Docker 容器
 
-    md5sum pytorch-3.0.0-torch_sdaa3.0.0.tar
+```bash
+docker run -dit --name mineru_docker \
+    --privileged \
+    --cap-add SYS_PTRACE \
+    --cap-add SYS_ADMIN \
+    --network=host \
+    --shm-size=500G \
+    mineru:sdaa-vllm-latest \
+    /bin/bash
+```
 
-#### 2.3 执行以下命令，导入Docker镜像
+>[!TIP]
+> 如需使用`vllm`环境,请执行以下操作：
+> - 进入容器后，通过以下命令切换到conda环境：
+>   ```bash
+>   conda activate vllm_env_py310
+>   ```
+>
+> - 切换成功后，您可以在命令行前看到`(vllm_env_py310)`的标识，这表示您已成功进入`vllm`的虚拟环境。
 
-    docker load < pytorch-3.0.0-torch_sdaa3.0.0.tar
-
-#### 2.4 执行以下命令，构建名为MinerU的Docker容器
-
-    docker run -itd --name="MinerU" --net=host --device=/dev/tcaicard0 --device=/dev/tcaicard1 --device=/dev/tcaicard2 --device=/dev/tcaicard3 --cap-add SYS_PTRACE --cap-add SYS_ADMIN --shm-size 64g jfrog.tecorigin.net/tecotp-docker/release/ubuntu22.04/x86_64/pytorch:3.0.0-torch_sdaa3.0.0 /bin/bash
-
-#### 2.5 执行以下命令，进入名称为tecopytorch_docker的Docker容器。
-
-    docker exec -it MinerU bash
+执行该命令后，您将进入到Docker容器的交互式终端，您可以直接在容器内运行MinerU相关命令来使用MinerU的功能。
+您也可以直接通过替换`/bin/bash`为服务启动命令来启动MinerU服务，详细说明请参考[通过命令启动服务](https://opendatalab.github.io/MinerU/zh/usage/quick_usage/#apiwebuihttp-clientserver)。
 
 
-### 3 执行以下命令安装MinerU 
-- 安装前的准备
-    ```
-    cd <MinerU>
-    pip install --upgrade pip
-    pip install uv
-    ```    
-- 由于镜像中安装了torch，并且不需要安装nvidia-nccl-cu12、nvidia-cudnn-cu12等包，因此需要注释掉一部分安装依赖。
-- 请注释掉<MinerU>/pyproject.toml文件中所有的"doclayout_yolo==0.0.4"依赖，并且将torch开头的包也注释掉。
-- 执行以下命令安装MinerU
-    ```
-    uv pip install -e .[core]
-    ``` 
-- 下载安装doclayout_yolo==0.0.4
-    ```
-    pip install doclayout_yolo==0.0.4 --no-deps
-    ``` 
-- 下载安装其他包(doclayout_yolo==0.0.4的依赖)
-    ```
-    pip install albumentations py-cpuinfo seaborn thop numpy==1.24.4
-    ``` 
-- 由于部分张量内部内存分布不连续，需要修改如下两个文件
-    <ultralytics安装路径>/ultralytics/utils/tal.py(330行左右,将view --> reshape)
-    <doclayout_yolo安装路径>/doclayout_yolo/utils/tal.py(375行左右,将view --> reshape)
-### 4 执行推理
-- 开启sdaa环境
-    ```
-    export TORCH_SDAA_AUTOLOAD=cuda_migrate
-    ```
-- 首次运行推理命令前请添加以下环境下载模型权重
-    ```
-    export HF_ENDPOINT=https://hf-mirror.com
-    ```
-- 运行以下命令执行推理
-    ```
-     mineru   -p 'input path'  -o  'output_path' --lang 'model_name'
-    ```
-其中model_name可从'ch', 'ch_server', 'ch_lite', 'en', 'korean', 'japan', 'chinese_cht', 'ta', 'te', 'ka', 'latin', 'arabic', 'east_slavic', 'cyrillic', 'devanagari'选择
-### 5 适配用到的软件栈版本列表
-使用v3.0.0软件栈版本适配,获取方式联系太初内部人员
+## 4. 注意事项
+
+不同环境下，MinerU对Tecorigin加速卡的支持情况如下表所示：
+
+<table border="1">
+  <thead>
+    <tr>
+      <th rowspan="2" colspan="2">使用场景</th>
+      <th colspan="2">容器环境</th>
+    </tr>
+    <tr>
+      <th>vllm</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="3">命令行工具(mineru)</td>
+      <td>pipeline</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td rowspan="3">fastapi服务(mineru-api)</td>
+      <td>pipeline</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td rowspan="3">gradio界面(mineru-gradio)</td>
+      <td>pipeline</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td>&lt;vlm/hybrid&gt;-auto-engine</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td>&lt;vlm/hybrid&gt;-http-client</td>
+      <td>🟢</td>
+    </tr>
+    <tr>
+      <td colspan="2">openai-server服务（mineru-openai-server）</td>
+      <td>🟢</td>
+    </tr>
+  </tbody>
+</table>
+
+注：  
+🟢: 支持，运行较稳定，精度与Nvidia GPU基本一致  
+🟡: 支持但较不稳定，在某些场景下可能出现异常，或精度存在一定差异  
+🔴: 不支持，无法运行，或精度存在较大差异
+
+>[!TIP]
+> - Tecorigin加速卡指定可用加速卡的方式与NVIDIA GPU类似，请参考[使用指定GPU设备](https://opendatalab.github.io/MinerU/zh/usage/advanced_cli_parameters/#cuda_visible_devices)章节说明,
+>将环境变量`CUDA_VISIBLE_DEVICES`替换为`SDAA_VISIBLE_DEVICES`即可。 
+> - 在太初平台可以通过`teco-smi -c`命令查看加速卡的使用情况，并根据需要指定空闲的加速卡ID以避免资源冲突。

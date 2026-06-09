@@ -4,8 +4,11 @@
 
 After executing the `mineru` command, in addition to the main markdown file output, multiple auxiliary files are generated for debugging, quality inspection, and further processing. These files include:
 
+The exact set of generated files depends on the backend and the input document type.
+
 - **Visual debugging files**: Help users intuitively understand the document parsing process and results
 - **Structured data files**: Contain detailed parsing data for secondary development
+- In multimodal markdown output, `image` / `chart` blocks render the screenshot first; when `content` exists, a collapsed HTML `<details>` block is appended after the image, using the block `sub_type` as the summary label when available and falling back to `image content` or `chart content`
 
 The following sections provide detailed descriptions of each file's purpose and format.
 
@@ -29,12 +32,12 @@ The following sections provide detailed descriptions of each file's purpose and 
 
 ![layout page example](../images/layout_example.png)
 
-### Text Spans File (spans.pdf)
+### Text Spans File (span.pdf)
 
 > [!NOTE]
 > Only applicable to pipeline backend
 
-**File naming format**: `{original_filename}_spans.pdf`
+**File naming format**: `{original_filename}_span.pdf`
 
 **Functionality**:
 
@@ -60,109 +63,45 @@ The following sections provide detailed descriptions of each file's purpose and 
 
 **File naming format**: `{original_filename}_model.json`
 
-##### Data Structure Definition
-
-```python
-from pydantic import BaseModel, Field
-from enum import IntEnum
-
-class CategoryType(IntEnum):
-    """Content category enumeration"""
-    title = 0               # Title
-    plain_text = 1          # Text
-    abandon = 2             # Including headers, footers, page numbers, and page annotations
-    figure = 3              # Image
-    figure_caption = 4      # Image caption
-    table = 5               # Table
-    table_caption = 6       # Table caption
-    table_footnote = 7      # Table footnote
-    isolate_formula = 8     # Interline formula
-    formula_caption = 9     # Interline formula number
-    embedding = 13          # Inline formula
-    isolated = 14           # Interline formula
-    text = 15               # OCR recognition result
-
-class PageInfo(BaseModel):
-    """Page information"""
-    page_no: int = Field(description="Page number, first page is 0", ge=0)
-    height: int = Field(description="Page height", gt=0)
-    width: int = Field(description="Page width", ge=0)
-
-class ObjectInferenceResult(BaseModel):
-    """Object recognition result"""
-    category_id: CategoryType = Field(description="Category", ge=0)
-    poly: list[float] = Field(description="Quadrilateral coordinates, format: [x0,y0,x1,y1,x2,y2,x3,y3]")
-    score: float = Field(description="Confidence score of inference result")
-    latex: str | None = Field(description="LaTeX parsing result", default=None)
-    html: str | None = Field(description="HTML parsing result", default=None)
-
-class PageInferenceResults(BaseModel):
-    """Page inference results"""
-    layout_dets: list[ObjectInferenceResult] = Field(description="Page recognition results")
-    page_info: PageInfo = Field(description="Page metadata")
-
-# Complete inference results
-inference_result: list[PageInferenceResults] = []
-```
-
-##### Coordinate System Description
-
-`poly` coordinate format: `[x0, y0, x1, y1, x2, y2, x3, y3]`
-
-- Represents coordinates of top-left, top-right, bottom-right, bottom-left points respectively
-- Coordinate origin is at the top-left corner of the page
-
-![poly coordinate diagram](../images/poly.png)
-
 ##### Sample Data
 
 ```json
 [
     {
-        "layout_dets": [
-            {
-                "category_id": 2,
-                "poly": [
-                    99.1906967163086,
-                    100.3119125366211,
-                    730.3707885742188,
-                    100.3119125366211,
-                    730.3707885742188,
-                    245.81326293945312,
-                    99.1906967163086,
-                    245.81326293945312
-                ],
-                "score": 0.9999997615814209
-            }
+        "cls_id": 12,
+        "label": "header",
+        "score": 0.93,
+        "bbox": [
+            1217,
+            104,
+            1516,
+            134
         ],
-        "page_info": {
-            "page_no": 0,
-            "height": 2339,
-            "width": 1654
-        }
+        "index": 2
     },
     {
-        "layout_dets": [
-            {
-                "category_id": 5,
-                "poly": [
-                    99.13092803955078,
-                    2210.680419921875,
-                    497.3183898925781,
-                    2210.680419921875,
-                    497.3183898925781,
-                    2264.78076171875,
-                    99.13092803955078,
-                    2264.78076171875
-                ],
-                "score": 0.9999997019767761
-            }
+        "cls_id": 6,
+        "label": "doc_title",
+        "score": 0.9751,
+        "bbox": [
+            275,
+            181,
+            1512,
+            292
         ],
-        "page_info": {
-            "page_no": 1,
-            "height": 2339,
-            "width": 1654
-        }
+        "index": 3
+    },
+    {
+        "cls_id": 22,
+        "label": "text",
+        "score": 0.9217,
+        "bbox": [
+            275,
+            330,
+            524,
+            370
+        ],
+        "index": 4
     }
 ]
 ```
@@ -176,7 +115,7 @@ inference_result: list[PageInferenceResults] = []
 | Field Name | Type | Description |
 |------------|------|-------------|
 | `pdf_info` | `list[dict]` | Array of parsing results for each page |
-| `_backend` | `string` | Parsing mode: `pipeline` or `vlm` |
+| `_backend` | `string` | Parsing mode: `pipeline`, `vlm`, or `office` |
 | `_version_name` | `string` | MinerU version number |
 
 ##### Page Information Structure (pdf_info)
@@ -195,7 +134,7 @@ inference_result: list[PageInferenceResults] = []
 ##### Block Structure Hierarchy
 
 ```
-Level 1 blocks (table | image)
+Level 1 blocks (table | image | chart)
 └── Level 2 blocks
     └── Lines
         └── Spans
@@ -205,7 +144,7 @@ Level 1 blocks (table | image)
 
 | Field Name | Description |
 |------------|-------------|
-| `type` | Block type: `table` or `image` |
+| `type` | Block type: `table`, `image`, or `chart` |
 | `bbox` | Rectangular box coordinates of the block `[x0, y0, x1, y1]` |
 | `blocks` | List of contained level 2 blocks |
 
@@ -227,6 +166,9 @@ Level 1 blocks (table | image)
 | `table_body` | Table body |
 | `table_caption` | Table caption text |
 | `table_footnote` | Table footnote |
+| `chart_body` | Chart body |
+| `chart_caption` | Chart caption text |
+| `chart_footnote` | Chart footnote |
 | `text` | Text block |
 | `title` | Title block |
 | `index` | Index block |
@@ -241,8 +183,8 @@ Level 1 blocks (table | image)
 
 **Span fields**:
 - `bbox`: Rectangular box coordinates of the span
-- `type`: Span type (`image`, `table`, `text`, `inline_equation`, `interline_equation`)
-- `content` | `img_path`: Text content or image path
+- `type`: Span type (`image`, `table`, `chart`, `text`, `inline_equation`, `interline_equation`)
+- `content` | `image_path`: Text content or image path
 
 ##### Sample Data
 
@@ -361,8 +303,12 @@ This is a simplified version of `middle.json` that stores all readable content b
 |------|-------------|
 | `image` | Image |
 | `table` | Table |
+| `chart` | Chart |
 | `text` | Text/Title |
 | `equation` | Interline formula |
+| `code` | Code block / algorithm block |
+| `list` | List / reference list |
+| `header` / `footer` / `page_number` / `aside_text` / `page_footnote` | Page auxiliary blocks |
 
 ##### Text Level Identification
 
@@ -377,6 +323,10 @@ Text levels are distinguished through the `text_level` field:
 
 - All content blocks include a `page_idx` field indicating the page number (starting from 0).
 - All content blocks include a `bbox` field representing the bounding box coordinates of the content block `[x0, y0, x1, y1]`, mapped to a range of 0-1000.
+- `code` entries use `sub_type` to distinguish `code` and `algorithm`, and may include fields such as `code_body`, `code_caption`, and `code_footnote`.
+- `list` entries may use `sub_type` to distinguish ordinary lists from reference-style lists.
+- `image` / `chart` entries may include an optional `sub_type` field to carry the visual subtype through downstream outputs.
+- Seal content is represented as an `image` entry with `sub_type: "seal"`.
 
 ##### Sample Data
 
@@ -440,6 +390,82 @@ Text levels are distinguished through the `text_level` field:
         ],  
         "page_idx": 5
     }
+]
+```
+
+### Common Content List V2 (content_list_v2.json)(development version, subject to change)
+
+**File naming format**: `{original_filename}_content_list_v2.json`
+
+##### Functionality
+
+`content_list_v2.json` is the new structured output added in 3.0. All backends now emit it in addition to the legacy `content_list.json`:
+
+- The top level is grouped by page for page-oriented consumption
+- Each item uses a unified `type + content` structure for easier programmatic processing
+- The exact supported `type` values depend on the backend and input type
+
+##### Common Fields
+
+| Field | Type | Description |
+|------|------|-------------|
+| `type` | `string` | Content type |
+| `content` | `dict` | Structured payload for the given `type` |
+| `bbox` | `list[int]` | Optional bounding box mapped into the 0-1000 coordinate range |
+| `anchor` | `string` | Optional anchor; some `DOCX` titles or index items may include it |
+
+`image` / `chart` items may also include an optional top-level `sub_type` field for visual subtype propagation.
+
+##### Common Types
+
+| Type | Description |
+|------|-------------|
+| `title` | Title block with `title_content` and `level` |
+| `paragraph` | Paragraph block with `paragraph_content` |
+| `equation_interline` | Interline formula with `math_content` and `math_type` |
+| `image` / `table` / `chart` | Visual blocks with image paths, captions, and related structured fields. Seal content uses `image` with `sub_type: "seal"` |
+| `code` | Code block with `code_content`, `code_caption`, `code_footnote`, and `code_language` |
+| `algorithm` | Algorithm block with `algorithm_content`, `algorithm_caption`, and `algorithm_footnote` |
+| `list` / `index` | List and index blocks with `list_items` |
+| `page_header` / `page_footer` / `page_number` / `page_aside_text` / `page_footnote` | Page auxiliary blocks |
+
+Inline fields such as `title_content`, `paragraph_content`, and captions are
+usually span lists. A `hyperlink` span contains `content` and `url`; when one
+link contains text fragments with different styles, it may also contain
+`children`. In that case, `content` is the concatenated child text, and the
+exact styles are represented by the child `text` spans.
+
+##### Sample Data
+
+```json
+[
+  [
+    {
+      "type": "title",
+      "content": {
+        "title_content": [
+          {
+            "type": "text",
+            "content": "1 Introduction"
+          }
+        ],
+        "level": 1
+      },
+      "bbox": [83, 121, 917, 156]
+    },
+    {
+      "type": "page_footnote",
+      "content": {
+        "page_footnote_content": [
+          {
+            "type": "text",
+            "content": "* Corresponding author"
+          }
+        ]
+      },
+      "bbox": [71, 815, 915, 841]
+    }
+  ]
 ]
 ```
 
@@ -641,9 +667,12 @@ Based on the pipeline format, with these VLM-specific extensions:
     * Fields: `code_body` (string), optional `code_caption` (list of strings)
 - New `list` type with `sub_type` (`text` | `ref_text`):
     * Field: `list_items` (array of strings)
+- `image` / `chart` entries may carry an optional `sub_type` field for visual subtype propagation.
+- `chart` entries may additionally expose `content`, `chart_caption`, and `chart_footnote` alongside `img_path`; `content` preserves the original Markdown table text.
 - All `discarded_blocks` entries are also output (e.g., headers, footers, page numbers, margin notes, page footnotes).
 - Existing types (`image`, `table`, `text`, `equation`) remain unchanged.
 - `bbox` still uses the 0–1000 normalized coordinate mapping.
+- Starting with 3.0, the VLM backend also emits `*_content_list_v2.json`; see the common V2 section above for the shared structure.
 
 
 ##### Examples
@@ -702,11 +731,12 @@ The above files constitute MinerU's complete output results. Users can choose ap
   
 - **Debugging and verification** (Use visualization files):
     * layout.pdf
-    * spans.pdf 
+    * span.pdf 
   
 - **Content extraction**: (Use simplified files):
     * *.md
     * content_list.json
+    * content_list_v2.json
   
 - **Secondary development**: (Use structured files):
     * middle.json

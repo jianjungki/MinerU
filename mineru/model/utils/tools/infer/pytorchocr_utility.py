@@ -1,3 +1,4 @@
+# Copyright (c) Opendatalab. All rights reserved.
 import os
 import math
 from pathlib import Path
@@ -32,6 +33,8 @@ def init_args():
     parser.add_argument("--det_model_path", type=str)
     parser.add_argument("--det_limit_side_len", type=float, default=960)
     parser.add_argument("--det_limit_type", type=str, default='max')
+    parser.add_argument("--det_max_side_limit", type=int, default=4000)
+    parser.add_argument("--det_box_type", type=str, default='quad')
 
     # DB parmas
     parser.add_argument("--det_db_thresh", type=float, default=0.3)
@@ -76,7 +79,7 @@ def init_args():
 
     parser.add_argument("--use_space_char", type=str2bool, default=True)
     parser.add_argument("--drop_score", type=float, default=0.5)
-    parser.add_argument("--limited_max_width", type=int, default=1280)
+    parser.add_argument("--limited_max_width", type=int, default=2560)
     parser.add_argument("--limited_min_width", type=int, default=16)
 
     parser.add_argument(
@@ -216,8 +219,9 @@ def base64_to_cv2(b64str):
 
 
 def get_arch_config(model_path):
-    from omegaconf import OmegaConf
-    all_arch_config = OmegaConf.load(DEFAULT_CFG_PATH)
+    import yaml
+    with open(DEFAULT_CFG_PATH, encoding='utf-8') as f:
+        all_arch_config = yaml.safe_load(f)
     path = Path(model_path)
     file_name = path.stem
     if file_name not in all_arch_config:

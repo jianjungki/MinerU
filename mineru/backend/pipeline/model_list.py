@@ -1,3 +1,4 @@
+# Copyright (c) Opendatalab. All rights reserved.
 class AtomicModel:
     Layout = "layout"
     MFD = "mfd"
@@ -6,4 +7,4 @@ class AtomicModel:
     WirelessTable = "wireless_table"
     WiredTable = "wired_table"
     TableCls = "table_cls"
-    ImgOrientationCls = "img_ori_cls"
+    TableOrientationCls = "table_ori_cls"

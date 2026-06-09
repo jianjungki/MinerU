@@ -1,3 +1,4 @@
+# Copyright (c) Opendatalab. All rights reserved.
 import cv2
 import copy
 import numpy as np
@@ -91,7 +92,7 @@ def sorted_boxes(dt_boxes):
     return:
         sorted boxes(array) with shape [4, 2]
     """
-    num_boxes = dt_boxes.shape[0]
+    num_boxes = len(dt_boxes)
     sorted_boxes = sorted(dt_boxes, key=lambda x: (x[0][1], x[0][0]))
     _boxes = list(sorted_boxes)
 

@@ -79,6 +79,41 @@ MCP Server · LangChain / Dify / FastGPT 原生集成 · 10+ 国产算力适配 
 
 # 更新记录
 
+- 2026/06/18 3.4 发布
+
+  本次版本更新聚焦于 **pipeline 后端 OCR 能力升级**、**OCR 处理链路优化** 与 **模型下载体验改进**。主要更新内容包括：
+
+  - OCR 模型升级与处理加速
+    - `pipeline` 后端 OCR 模型更新至 `PP-OCRv6`，在 OmniDocBench v1.6 评测中，OCR 相关指标提升约 `11%`。
+    - 移除 OCR 语言选择中的日语、繁体中文、英语、拉丁文选项，相关场景统一路由到 `ch` OCR 模型，简化模型配置与语言选择逻辑。
+    - 优化 OCR 推理与处理链路，OCR 处理速度提升约 `100%`，显著改善批量文档和 OCR 密集型文档的解析效率。
+
+  - 模型下载逻辑优化
+    - 新增模型源自动选择能力，首次安装时可根据当前网络环境自动选择更合适的模型源。
+    - 下载模型前会优先检查本地已下载的模型缓存文件，命中缓存时可直接复用，减少重复下载和不必要的远端请求。
+    - 更多模型源配置、自动选择策略与本地模型使用说明，请参考 [模型源说明](https://opendatalab.github.io/MinerU/zh/usage/model_source/)。
+
+  在 3.4 版本，MinerU 进一步提升了 `pipeline` 后端在 OCR 场景下的解析精度与处理效率，同时优化了模型下载、缓存复用和本地配置写入流程，让首次安装、模型更新和多环境部署更加稳定、自动化。
+
+- 2026/06/11 3.3 发布
+
+  本次版本更新聚焦于 **Hybrid 解析性能优化** 与 **VLM 模型能力升级**。主要更新内容包括：
+
+  - Hybrid 后端新增 `effort` 解析强度参数
+    - 新增 `medium` 与 `high` 两档解析强度，用户可根据解析速度、解析精度和功能需求灵活选择。
+    - 在 OmniDocBench v1.6 评测中，`medium` 相比 `high` 综合精度仅降低 `0.13`，但在不同设备和场景下可获得 `35%` ~ `220%` 的解析速度提升：
+      - Linux：文本 PDF 场景提升约 `80%`，OCR 场景提升约 `35%`
+      - Windows：文本 PDF 场景提升约 `90%`，OCR 场景提升约 `45%`
+      - macOS：文本 PDF 场景提升约 `220%`，OCR 场景提升约 `50%`
+    - 默认 Hybrid 后端将使用 `effort=medium`，在保持高解析精度的同时显著提升整体解析效率。
+    - `medium` 档不支持 `image analysis`（图片/图表分析）功能；如需极致解析精度或启用 `image analysis`，可通过 `effort=high` 切换至高强度解析模式，但解析速度会受到一定影响。
+
+  - VLM 模型升级至 `MinerU2.5-Pro-2605-1.2B`
+    - 修复 `2604` 版本中存在的多处模型问题，进一步提升复杂文档场景下的解析稳定性。
+    - 原生支持多语言 OCR，降低多语言文档解析时对额外语言参数配置的依赖，提升跨语言场景的开箱即用体验。
+
+  通过 3.3 版本，MinerU 在保持高精度解析能力的同时，进一步提升了 Hybrid 后端在多平台、多场景下的解析效率。默认 `medium` 解析强度更适合大多数日常文档处理任务，而 `high` 模式则面向对解析精度和 `image analysis` 能力有更高要求的场景。
+
 - 2026/04/18 3.1.0 发布
 
   本次版本更新聚焦于**许可协议开放性、解析精度提升与全格式原生支持**。主要更新内容包括：
@@ -183,7 +218,7 @@ https://github.com/user-attachments/assets/4bea02c9-6d54-4cd6-97ed-dff14340982c
     <tr>
       <th rowspan="2">解析后端</th>
       <th rowspan="2">pipeline</th>
-      <th colspan="2">*-auto-engine</th>
+      <th colspan="2">*-engine</th>
       <th colspan="2">*-http-client</th>
     </tr>
     <tr>
@@ -202,8 +237,11 @@ https://github.com/user-attachments/assets/4bea02c9-6d54-4cd6-97ed-dff14340982c
     </tr> 
     <tr>
       <th>精度指标<sup>1</sup></th>
-      <td style="text-align:center;">85+</td>
-      <td colspan="4" style="text-align:center;">95+</td>
+      <td style="text-align:center;">86.47</td>
+      <td style="text-align:center;">95.39（high）<br>95.26（medium）</td>
+      <td style="text-align:center;">95.30</td>
+      <td style="text-align:center;">95.39（high）<br>95.26（medium）</td>
+      <td style="text-align:center;">95.30</td>
     </tr>
     <tr>
       <th>操作系统</th>
@@ -223,8 +261,7 @@ https://github.com/user-attachments/assets/4bea02c9-6d54-4cd6-97ed-dff14340982c
     <tr>
       <th>显存最低要求</th>
       <td style="text-align:center;">4GB</td>
-      <td style="text-align:center;">8GB</td>
-      <td style="text-align:center;">8GB</td>
+      <td colspan="2" style="text-align:center;">8GB</td>
       <td style="text-align:center;">2GB</td>
     </tr>
     <tr>

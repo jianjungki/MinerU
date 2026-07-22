@@ -66,10 +66,7 @@ def txt_spans_extract(pdf_page, spans, pil_img, scale, all_bboxes, all_discarded
             textpage=textpage,
             page_char_count=page_char_count,
         )
-        page_all_chars = [
-            char for char in page_chars['chars']
-            if _is_supported_rotation(char['rotation'])
-        ]
+        page_all_chars = _get_chars_for_span_fill(page_chars)
 
         # 计算所有sapn的高度的中位数
         span_height_list = []
@@ -138,6 +135,77 @@ def _is_supported_rotation(rotation) -> bool:
     """判断 pdftext 旋转角是否属于当前可回填的四个标准方向。"""
     rotation_degrees = math.degrees(rotation)
     return any(abs(rotation_degrees - angle) < 0.1 for angle in [0, 90, 180, 270])
+
+
+def _get_char_fill_key(char):
+    """生成字符回填判定 key，优先使用 pdftext 提供的页内 char_idx。"""
+    char_idx = char.get('char_idx')
+    if char_idx is not None:
+        return ('char_idx', char_idx)
+    return ('object_id', id(char))
+
+
+def _iter_line_chars(line):
+    """按 pdftext line/span 结构展开字符，兼容缺少 chars 字段的异常 span。"""
+    for span in line.get('spans', []):
+        for char in span.get('chars', []):
+            yield char
+
+
+def _is_visible_standard_rotation_char(char) -> bool:
+    """判断字符是否是可见的标准方向正文字符，避免换行控制符误放行水印。"""
+    text = char.get('char', '')
+    if not text or text.isspace() or text in {'\r', '\n'}:
+        return False
+
+    bbox = char.get('bbox')
+    if not bbox:
+        return False
+
+    x0, y0, x1, y1 = [float(v) for v in bbox]
+    return (
+        x1 > x0
+        and y1 > y0
+        and _is_supported_rotation(char.get('rotation', 0))
+    )
+
+
+def _get_chars_for_span_fill(page_chars):
+    """选择允许参与 span 回填的字符，保留正文内仿斜体并过滤整行斜向水印。"""
+    all_chars = page_chars['chars']
+    fill_char_keys = {
+        _get_char_fill_key(char)
+        for char in all_chars
+        if _is_supported_rotation(char.get('rotation', 0))
+    }
+
+    rotated_chars = [
+        char for char in all_chars
+        if not _is_supported_rotation(char.get('rotation', 0))
+    ]
+    if not rotated_chars:
+        return [
+            char for char in all_chars
+            if _get_char_fill_key(char) in fill_char_keys
+        ]
+
+    for line in get_lines_from_chars(all_chars):
+        if not _is_supported_rotation(line.get('rotation', 0)):
+            continue
+
+        line_chars = list(_iter_line_chars(line))
+        if not any(_is_visible_standard_rotation_char(char) for char in line_chars):
+            continue
+
+        # 标准方向正文行内的局部旋转字符通常是仿斜体强调，需要允许回填。
+        for char in line_chars:
+            if not _is_supported_rotation(char.get('rotation', 0)):
+                fill_char_keys.add(_get_char_fill_key(char))
+
+    return [
+        char for char in all_chars
+        if _get_char_fill_key(char) in fill_char_keys
+    ]
 
 
 def _prepare_post_ocr_spans(need_ocr_spans, spans, pil_img, scale):
@@ -296,12 +364,17 @@ def fill_char_in_spans(spans, all_chars, median_span_height):
     return need_ocr_spans
 
 
-LINE_STOP_FLAG = ('.', '!', '?', '。', '！', '？', ')', '）', '"', '”', ':', '：', ';', '；', ']', '】', '}', '}', '>', '》', '、', ',', '，', '-', '—', '–',)
-LINE_START_FLAG = ('(', '（', '"', '“', '【', '{', '《', '<', '「', '『', '【', '[',)
+LINE_STOP_FLAG = (
+    '.', '!', '?', '。', '！', '？', ')', '）', '"', '”', ':', '：', ';',
+    '；', ']', '】', '}', '}', '>', '》', '、', ',', '，', '-', '—', '–',
+)
+LINE_START_FLAG = (
+    '(', '（', '"', '“', '【', '{', '《', '<', '「', '『', '【', '[',
+)
 
 Span_Height_Ratio = 0.33  # 字符的中轴和span的中轴高度差不能超过1/3span高度
 SCRIPT_BODY_HEIGHT_RATIO = 0.9
-SCRIPT_CENTER_TOLERANCE_RATIO = 0.12
+SCRIPT_CENTER_TOLERANCE_RATIO = 0.15
 
 
 def _is_private_use_char(char: str) -> bool:
@@ -386,7 +459,8 @@ def calculate_char_in_span(char_bbox, span_bbox, char, span_height_ratio=Span_He
     if (
         span_bbox[0] < char_center_x < span_bbox[2]
         and span_bbox[1] < char_center_y < span_bbox[3]
-        and abs(char_center_y - span_center_y) < span_height * span_height_ratio  # 字符的中轴和span的中轴高度差不能超过Span_Height_Ratio
+        # 字符的中轴和span的中轴高度差不能超过Span_Height_Ratio
+        and abs(char_center_y - span_center_y) < span_height * span_height_ratio
     ):
         return True
     else:
@@ -520,6 +594,14 @@ def _wrap_script_runs(role_text_parts):
     return ''.join(wrapped_parts)
 
 
+def _remove_control_line_break_chars(chars):
+    """过滤 PDFium 文本片段边界控制换行，避免其参与字符间距补空格。"""
+    return [
+        char for char in chars
+        if char.get('char') not in {'\r', '\n'}
+    ]
+
+
 def chars_to_content(span):
     # 检查span中的char是否为空
     if len(span['chars']) != 0:
@@ -531,34 +613,38 @@ def chars_to_content(span):
         ):
             chars = sorted(chars, key=lambda x: x['char_idx'])
 
-        char_metrics = _get_char_bbox_metrics_list(chars)
-        # Calculate the width of each character
-        char_widths = [metrics['width'] for metrics in char_metrics]
-        # Calculate the median width
-        median_width = statistics.median(char_widths)
-        script_roles = _classify_char_script_roles(chars, char_metrics)
+        chars = _remove_control_line_break_chars(chars)
+        if len(chars) == 0:
+            span['content'] = ''
+        else:
+            char_metrics = _get_char_bbox_metrics_list(chars)
+            # Calculate the width of each character
+            char_widths = [metrics['width'] for metrics in char_metrics]
+            # Calculate the median width
+            median_width = statistics.median(char_widths)
+            script_roles = _classify_char_script_roles(chars, char_metrics)
 
-        role_text_parts = []
-        for idx, char1 in enumerate(chars):
-            char2 = chars[idx + 1] if idx + 1 < len(chars) else None
-            role1 = script_roles[idx]
-            role2 = script_roles[idx + 1] if char2 else None
+            role_text_parts = []
+            for idx, char1 in enumerate(chars):
+                char2 = chars[idx + 1] if idx + 1 < len(chars) else None
+                role1 = script_roles[idx]
+                role2 = script_roles[idx + 1] if char2 else None
 
-            # 如果下一个char的x0和上一个char的x1距离超过0.25个字符宽度，则需要在中间插入一个空格
-            role_text_parts.append((role1, char1['char']))
-            if (
-                char2
-                and char2['bbox'][0] - char1['bbox'][2] > median_width * 0.25
-                and char1['char'] != ' '
-                and char2['char'] != ' '
-            ):
-                space_role = role1 if role1 == role2 else 'body'
-                role_text_parts.append((space_role, ' '))
+                # 如果下一个char的x0和上一个char的x1距离超过0.25个字符宽度，则需要在中间插入一个空格
+                role_text_parts.append((role1, char1['char']))
+                if (
+                    char2
+                    and char2['bbox'][0] - char1['bbox'][2] > median_width * 0.25
+                    and char1['char'] != ' '
+                    and char2['char'] != ' '
+                ):
+                    space_role = role1 if role1 == role2 else 'body'
+                    role_text_parts.append((space_role, ' '))
 
-        content = _wrap_script_runs(role_text_parts)
-        content = __replace_unicode(content)
-        content = __replace_ligatures(content)
-        span['content'] = content.strip()
+            content = _wrap_script_runs(role_text_parts)
+            content = __replace_unicode(content)
+            content = __replace_ligatures(content)
+            span['content'] = content.strip()
 
     del span['chars']
 
